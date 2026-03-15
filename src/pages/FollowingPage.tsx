@@ -207,25 +207,30 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                   <div className="space-y-2 mb-4">
                     {zoneInjuries.map(inj => (
                       <div key={inj.id} className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-3">
-                        <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
-                          style={{ backgroundColor: `${SEVERITY_COLORS[inj.severity]}18`, color: SEVERITY_COLORS[inj.severity] }}
+                        <button
+                          onClick={() => { setSelectedZone(null); setSelectedInjuryDetail(inj); }}
+                          className="flex items-center gap-3 flex-1 min-w-0 text-left"
                         >
-                          {inj.severity}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-800">{INJURY_TYPES[inj.type].nl}</span>
-                            <span
-                              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                              style={{ backgroundColor: `${STATUS_COLORS[inj.status]}18`, color: STATUS_COLORS[inj.status] }}
-                            >
-                              {STATUS_LABELS[inj.status]}
-                            </span>
-                            {inj.advice && <span className="text-xs">💬</span>}
+                          <div
+                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                            style={{ backgroundColor: `${SEVERITY_COLORS[inj.severity]}18`, color: SEVERITY_COLORS[inj.severity] }}
+                          >
+                            {inj.severity}
                           </div>
-                          <div className="text-xs text-gray-400">{formatDate(inj.date)}</div>
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-800">{INJURY_TYPES[inj.type].nl}</span>
+                              <span
+                                className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                                style={{ backgroundColor: `${STATUS_COLORS[inj.status]}18`, color: STATUS_COLORS[inj.status] }}
+                              >
+                                {STATUS_LABELS[inj.status]}
+                              </span>
+                              {inj.advice && <span className="text-xs">💬</span>}
+                            </div>
+                            <div className="text-xs text-gray-400">{formatDate(inj.date)}</div>
+                          </div>
+                        </button>
                         <button
                           onClick={() => setAdviceTarget(inj)}
                           className="flex-shrink-0 text-xs px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg font-medium hover:bg-green-100 transition-colors"
