@@ -9,14 +9,11 @@ interface InjuryDetailProps {
   onDelete: (id: string) => void;
   onClose: () => void;
   readOnly?: boolean;
-  /** Show "Advies geven" button — caller handles the click */
   onAdvice?: () => void;
 }
 
-/** Backward-compat: get advices array even if injury has old single-advice fields */
 function getAdvices(injury: Injury): Array<{ text: string; date: string; by?: string }> {
   if (injury.advices && injury.advices.length > 0) return injury.advices;
-  // Legacy fallback
   const legacyAny = injury as unknown as Record<string, string | undefined>;
   if (legacyAny['advice']) {
     return [{
@@ -50,42 +47,69 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
     onUpdate(injury.id, { recoveryNotes });
   };
 
+  const inputStyle = {
+    background: '#f2f2f7',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '14px 16px',
+    color: '#1c1c1e',
+    fontSize: '15px',
+    outline: 'none',
+    width: '100%',
+    resize: 'none' as const,
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 animate-fade-in" />
 
       <div
-        className="relative w-full max-w-lg bg-white rounded-t-2xl animate-slide-up max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="relative w-full max-w-lg bg-white animate-slide-up max-h-[90vh] overflow-y-auto"
+        style={{ borderRadius: '24px 24px 0 0', boxShadow: '0 -4px 30px rgba(0,0,0,0.12)' }}
         onClick={e => e.stopPropagation()}
       >
+        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-surface-600 rounded-full" />
+          <div className="w-9 h-1 rounded-full" style={{ background: '#d1d1d6' }} />
         </div>
 
-        <div className="px-5 pb-6">
+        <div className="px-5 pb-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex-1 min-w-0 pr-3">
+              <h2 className="text-xl font-bold" style={{ color: '#1c1c1e' }}>
                 {zone?.nameNl || injury.bodyZoneId}
               </h2>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-[13px] mt-0.5" style={{ color: '#8e8e93' }}>
                 {INJURY_TYPES[injury.type].nl}
                 {injury.subLocation && ` · ${injury.subLocation}`}
                 {' · '}{formatDate(injury.date)}
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-surface-700 flex items-center justify-center text-gray-500 hover:text-gray-800"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Severity pill */}
+              <span
+                className="px-2.5 py-1 rounded-full text-[12px] font-bold"
+                style={{
+                  backgroundColor: `${SEVERITY_COLORS[injury.severity]}20`,
+                  color: SEVERITY_COLORS[injury.severity],
+                }}
+              >
+                Ernst {injury.severity}/5
+              </span>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium"
+                style={{ background: '#e5e5ea', color: '#8e8e93' }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          {/* Status Badge */}
+          {/* Status badge */}
           <div
-            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium mb-5"
+            className="inline-flex items-center px-3 py-1.5 rounded-full text-[13px] font-medium mb-5"
             style={{
               backgroundColor: `${STATUS_COLORS[injury.status]}18`,
               color: STATUS_COLORS[injury.status],
@@ -98,69 +122,77 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
             {STATUS_LABELS[injury.status]}
           </div>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-3 gap-2 mb-5">
-            <div className="bg-surface-700 rounded-xl p-3 text-center border border-surface-600">
-              <div className="text-xs text-gray-400 mb-1">Ernst</div>
+          {/* Info rows — Apple grouped table style */}
+          <div
+            className="rounded-2xl overflow-hidden mb-5"
+            style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+          >
+            {[
+              { label: 'Type', value: INJURY_TYPES[injury.type].nl },
+              { label: 'Context', value: `${injury.context === 'training' ? '🏋️' : injury.context === 'wedstrijd' ? '🏉' : '📋'} ${INJURY_CONTEXTS[injury.context]}` },
+              { label: 'Datum blessure', value: formatDate(injury.date) },
+              { label: 'Dagen geleden', value: `${Math.max(0, Math.ceil((Date.now() - new Date(injury.date).getTime()) / 86400000))} dagen` },
+              ...(injury.subLocation ? [{ label: 'Locatie', value: injury.subLocation }] : []),
+            ].map((row, i, arr) => (
               <div
-                className="text-xl font-bold"
-                style={{ color: SEVERITY_COLORS[injury.severity] }}
+                key={row.label}
+                className="flex items-center justify-between bg-white px-4 py-3.5"
+                style={{ borderBottom: i < arr.length - 1 ? '0.5px solid #e5e5ea' : 'none' }}
               >
-                {injury.severity}/5
+                <span className="text-[15px]" style={{ color: '#8e8e93' }}>{row.label}</span>
+                <span className="text-[15px] font-medium" style={{ color: '#1c1c1e' }}>{row.value}</span>
               </div>
-            </div>
-            <div className="bg-surface-700 rounded-xl p-3 text-center border border-surface-600">
-              <div className="text-xs text-gray-400 mb-1">Context</div>
-              <div className="text-sm font-medium text-gray-700">
-                {injury.context === 'training' ? '🏋️' : injury.context === 'wedstrijd' ? '🏉' : '📋'}
-                <br />{INJURY_CONTEXTS[injury.context]}
-              </div>
-            </div>
-            <div className="bg-surface-700 rounded-xl p-3 text-center border border-surface-600">
-              <div className="text-xs text-gray-400 mb-1">Dagen</div>
-              <div className="text-xl font-bold text-gray-900">
-                {Math.max(0, Math.ceil((Date.now() - new Date(injury.date).getTime()) / 86400000))}
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Notes */}
           {injury.notes && (
-            <div className="bg-surface-700 rounded-xl p-4 mb-5 border border-surface-600">
-              <div className="text-xs text-gray-400 mb-1">Notities</div>
-              <p className="text-sm text-gray-700">{injury.notes}</p>
+            <div
+              className="rounded-2xl p-4 mb-5"
+              style={{ background: '#f2f2f7' }}
+            >
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#8e8e93' }}>Notities</div>
+              <p className="text-[15px]" style={{ color: '#1c1c1e' }}>{injury.notes}</p>
             </div>
           )}
 
-          {/* Advices timeline (newest first) */}
+          {/* Advices timeline */}
           {advices.length > 0 && (
-            <div className="mb-5 space-y-3">
-              {[...advices]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((adv, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-xl p-4 border border-green-200"
-                    style={{ borderLeftWidth: '4px', borderLeftColor: '#22c55e', background: '#f0fdf4' }}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base">💬</span>
-                      <span className="text-sm font-semibold text-green-800">
-                        {adv.by ? `Advies van ${adv.by}` : 'Advies van fysio'}
-                      </span>
-                      <span className="text-xs text-green-500 ml-auto">{formatDate(adv.date)}</span>
+            <div className="mb-5">
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#8e8e93' }}>
+                Adviezen ({advices.length})
+              </div>
+              <div className="space-y-3">
+                {[...advices]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((adv, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-2xl p-4 pl-4"
+                      style={{
+                        background: 'rgba(48,209,88,0.08)',
+                        borderLeft: '3px solid #30d158',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[13px] font-semibold" style={{ color: '#1c1c1e' }}>
+                          {adv.by ? `Advies van ${adv.by}` : 'Advies van fysio'}
+                        </span>
+                        <span className="text-[11px] ml-auto" style={{ color: '#8e8e93' }}>{formatDate(adv.date)}</span>
+                      </div>
+                      <p className="text-[14px] leading-relaxed" style={{ color: '#3a3a3c' }}>{adv.text}</p>
                     </div>
-                    <p className="text-sm text-green-900 leading-relaxed">{adv.text}</p>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
           )}
 
-          {/* "Advies geven" button — only shown in readOnly mode if caller provides handler */}
+          {/* Advies geven button — readOnly mode */}
           {readOnly && onAdvice && (
             <button
               onClick={onAdvice}
-              className="w-full mb-5 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-colors text-sm"
+              className="w-full mb-5 py-3.5 text-white font-semibold rounded-xl text-[15px]"
+              style={{ background: '#30d158' }}
             >
               💬 Advies geven
             </button>
@@ -168,27 +200,29 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
 
           {/* Status Progress */}
           <div className="mb-5">
-            <div className="text-sm text-gray-500 mb-3">Herstel Voortgang</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#8e8e93' }}>
+              Herstel Voortgang
+            </div>
             <div className="flex items-center gap-1">
               {statusFlow.map((status, i) => (
                 <div key={status} className="flex items-center flex-1">
                   <button
                     onClick={readOnly ? undefined : () => onUpdateStatus(injury.id, status)}
                     disabled={readOnly}
-                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-                      i <= currentIndex
-                        ? 'text-white'
-                        : 'bg-surface-700 text-gray-400 border border-surface-600' +
-                          (readOnly ? '' : ' hover:text-gray-700')
-                    } ${readOnly ? 'cursor-default' : ''}`}
+                    className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition-all"
                     style={i <= currentIndex ? {
                       backgroundColor: STATUS_COLORS[status],
-                    } : undefined}
+                      color: '#fff',
+                    } : {
+                      backgroundColor: '#f2f2f7',
+                      color: '#8e8e93',
+                      cursor: readOnly ? 'default' : 'pointer',
+                    }}
                   >
                     {STATUS_LABELS[status]}
                   </button>
                   {i < statusFlow.length - 1 && (
-                    <div className="w-3 h-0.5 bg-surface-600 mx-0.5" />
+                    <div className="w-2 h-0.5 mx-0.5" style={{ background: '#e5e5ea' }} />
                   )}
                 </div>
               ))}
@@ -197,10 +231,15 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
 
           {/* Recovery Notes */}
           <div className="mb-5">
-            <div className="text-sm text-gray-500 mb-2">Herstel Notities</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#8e8e93' }}>
+              Herstel Notities
+            </div>
             {readOnly ? (
-              <p className="text-sm text-gray-700 bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 min-h-[4rem]">
-                {injury.recoveryNotes || <span className="text-gray-400 italic">Geen herstel notities</span>}
+              <p
+                className="text-[15px] rounded-2xl px-4 py-3 min-h-[4rem]"
+                style={{ background: '#f2f2f7', color: '#1c1c1e' }}
+              >
+                {injury.recoveryNotes || <span style={{ color: '#aeaeb2', fontStyle: 'italic' }}>Geen herstel notities</span>}
               </p>
             ) : (
               <>
@@ -209,12 +248,14 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
                   onChange={e => setRecoveryNotes(e.target.value)}
                   placeholder="Voeg herstel notities toe..."
                   rows={3}
-                  className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors resize-none placeholder:text-gray-400"
+                  style={inputStyle}
+                  className="placeholder:text-[#aeaeb2]"
                 />
                 {recoveryNotes !== injury.recoveryNotes && (
                   <button
                     onClick={handleSaveNotes}
-                    className="mt-2 px-4 py-2 bg-rugby-700 text-white text-sm rounded-lg hover:bg-rugby-600 transition-colors"
+                    className="mt-2 px-4 py-2.5 text-white text-[13px] font-semibold rounded-xl"
+                    style={{ background: '#30d158' }}
                   >
                     Notities Opslaan
                   </button>
@@ -225,8 +266,11 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
 
           {/* Recovery Date */}
           {injury.recoveryDate && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-5">
-              <div className="text-sm text-green-700 font-medium">
+            <div
+              className="rounded-2xl p-4 mb-5"
+              style={{ background: 'rgba(48,209,88,0.08)' }}
+            >
+              <div className="text-[15px] font-medium" style={{ color: '#30d158' }}>
                 ✅ Hersteld op {formatDate(injury.recoveryDate)}
               </div>
             </div>
@@ -237,7 +281,8 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
             !showDeleteConfirm ? (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full py-3 text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
+                className="w-full py-3 text-[15px] font-medium transition-colors"
+                style={{ color: '#ff453a' }}
               >
                 Blessure Verwijderen
               </button>
@@ -245,13 +290,15 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
               <div className="flex gap-2">
                 <button
                   onClick={() => { onDelete(injury.id); onClose(); }}
-                  className="flex-1 py-3 bg-red-50 text-red-500 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                  className="flex-1 py-3 rounded-xl text-[14px] font-semibold"
+                  style={{ background: 'rgba(255,69,58,0.1)', color: '#ff453a' }}
                 >
                   Bevestig Verwijderen
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-3 bg-surface-700 text-gray-500 border border-surface-600 rounded-xl text-sm font-medium hover:text-gray-800 transition-colors"
+                  className="flex-1 py-3 rounded-xl text-[14px] font-medium"
+                  style={{ background: '#f2f2f7', color: '#8e8e93' }}
                 >
                   Annuleren
                 </button>

@@ -31,7 +31,14 @@ function timeAgo(dateStr: string | null): string {
   return `${Math.floor(diff / 86400)} dag(en) geleden`;
 }
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+/** Get initials from a label string */
+function getInitials(label: string): string {
+  const words = label.trim().split(/\s+/);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
+const POLL_INTERVAL = 30_000;
 
 export default function FollowingPage({ sync }: FollowingPageProps) {
   const { watching, pullData } = sync;
@@ -43,7 +50,6 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
   const [showInjuryModal, setShowInjuryModal] = useState(false);
   const [adviceTarget, setAdviceTarget] = useState<Injury | null>(null);
 
-  // Auto-open InjuryModal when write-user taps a zone with no active injuries
   useEffect(() => {
     if (!selectedZone || !selectedPerson || selectedPerson.permission !== 'write') return;
     const data = personData[selectedPerson.ownerId];
@@ -92,27 +98,28 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
     }
   }, [pullData]);
 
-  // Initial fetch + polling for all watched people
   useEffect(() => {
     if (watching.length === 0) return;
-
     watching.forEach(entry => fetchPerson(entry));
-
     const interval = setInterval(() => {
       watching.forEach(entry => fetchPerson(entry));
     }, POLL_INTERVAL);
-
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watching.map(w => w.ownerId).join(',')]);
 
   if (watching.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center px-6 text-center">
-        <div className="text-5xl mb-4">👥</div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Niemand gevolgd</h2>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          Vraag iemand om hun koppelcode te delen en voeg ze toe via het <strong>Delen</strong>-scherm (🔗).
+      <div className="h-full flex flex-col items-center justify-center px-6 text-center" style={{ background: '#f2f2f7' }}>
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4"
+          style={{ background: '#e5e5ea' }}
+        >
+          👥
+        </div>
+        <h2 className="text-xl font-bold mb-2" style={{ color: '#1c1c1e' }}>Niemand gevolgd</h2>
+        <p className="text-[15px] leading-relaxed" style={{ color: '#8e8e93' }}>
+          Vraag iemand om hun koppelcode te delen en voeg ze toe via het <strong style={{ color: '#1c1c1e' }}>Delen</strong>-scherm.
         </p>
       </div>
     );
@@ -123,20 +130,28 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
     const label = selectedPerson.label ?? `Speler ${selectedPerson.ownerId.slice(0, 8)}`;
 
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col" style={{ background: '#f2f2f7' }}>
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-100">
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-white" style={{ borderBottom: '0.5px solid #e5e5ea' }}>
           <button
             onClick={() => setSelectedPerson(null)}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-600"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold"
+            style={{ background: '#e5e5ea', color: '#1c1c1e' }}
           >
             ←
           </button>
+          {/* Avatar */}
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+            style={{ background: '#30d158' }}
+          >
+            {getInitials(label)}
+          </div>
           <div className="flex-1">
-            <h2 className="font-bold text-gray-900">{label}</h2>
-            <p className="text-xs text-gray-400">
+            <h2 className="font-bold text-[16px]" style={{ color: '#1c1c1e' }}>{label}</h2>
+            <p className="text-[12px]" style={{ color: '#8e8e93' }}>
               {data?.loading ? (
-                <span className="text-amber-600">Ophalen...</span>
+                <span style={{ color: '#ff9f0a' }}>Ophalen...</span>
               ) : (
                 timeAgo(data?.updatedAt ?? null)
               )}
@@ -145,25 +160,27 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
           <button
             onClick={() => fetchPerson(selectedPerson)}
             disabled={data?.loading}
-            className="text-sm text-rugby-700 font-medium disabled:opacity-40"
+            className="text-sm font-semibold disabled:opacity-40"
+            style={{ color: '#30d158' }}
           >
-            ↻ Vernieuwen
+            ↻
           </button>
         </div>
 
-        {/* View tabs */}
-        <div className="flex gap-1 px-4 pb-2">
-          {([['bodymap', '🏠 Body Map'], ['logboek', '📋 Logboek']] as const).map(([key, label]) => (
+        {/* View tabs — pill style */}
+        <div className="flex gap-2 px-4 pt-3 pb-2">
+          {([['bodymap', '🗺️ Body Map'], ['logboek', '📋 Logboek']] as const).map(([key, tabLabel]) => (
             <button
               key={key}
               onClick={() => setPersonView(key)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+              className="flex-1 py-2 rounded-full text-[13px] font-medium transition-all"
+              style={
                 personView === key
-                  ? 'bg-rugby-700 text-white'
-                  : 'bg-white text-gray-500 border border-gray-200'
-              }`}
+                  ? { background: '#30d158', color: '#fff' }
+                  : { background: '#e5e5ea', color: '#8e8e93' }
+              }
             >
-              {label}
+              {tabLabel}
             </button>
           ))}
         </div>
@@ -171,10 +188,15 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
         {/* Body map view */}
         {personView === 'bodymap' && (
         <>
-        {/* Body map — editable if write permission */}
-        <div className="flex-1 min-h-0 overflow-hidden px-4 py-2">
+        <div
+          className="flex-1 min-h-0 overflow-hidden mx-4 mb-3 rounded-2xl"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 40%, #e8f0ff 0%, #f2f2f7 70%)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          }}
+        >
           {data?.error ? (
-            <div className="text-center mt-10 text-sm text-red-600">{data.error}</div>
+            <div className="text-center mt-10 text-sm" style={{ color: '#ff453a' }}>{data.error}</div>
           ) : (
             <BodyMap
               injuries={data?.injuries ?? []}
@@ -183,57 +205,67 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
           )}
         </div>
 
-        {/* Zone injury list sheet — write access, zone has existing active/recovering injuries */}
+        {/* Zone injury list sheet */}
         {selectedZone && selectedPerson.permission === 'write' && !showInjuryModal && (() => {
           const zoneInjuries = (data?.injuries ?? []).filter(i => i.bodyZoneId === selectedZone && i.status !== 'healed');
-          if (zoneInjuries.length === 0) return null; // handled via useEffect
+          if (zoneInjuries.length === 0) return null;
           const zone = getBodyZone(selectedZone);
           const formatDate = (s: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(s));
           return (
             <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedZone(null)}>
-              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 bg-black/40 animate-fade-in" />
               <div
-                className="relative w-full max-w-lg bg-white rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto"
+                className="relative w-full max-w-lg bg-white animate-slide-up max-h-[80vh] overflow-y-auto"
+                style={{ borderRadius: '24px 24px 0 0', boxShadow: '0 -4px 30px rgba(0,0,0,0.12)' }}
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 bg-gray-200 rounded-full" />
+                  <div className="w-9 h-1 rounded-full" style={{ background: '#d1d1d6' }} />
                 </div>
-                <div className="px-5 pb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-semibold text-gray-900">{zone?.nameNl || selectedZone}</h2>
-                    <button onClick={() => setSelectedZone(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+                <div className="px-5 pb-8">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold" style={{ color: '#1c1c1e' }}>{zone?.nameNl || selectedZone}</h2>
+                    <button
+                      onClick={() => setSelectedZone(null)}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                      style={{ background: '#e5e5ea', color: '#8e8e93' }}
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <div className="space-y-2 mb-4">
-                    {zoneInjuries.map(inj => (
-                      <div key={inj.id} className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+                  <div className="rounded-2xl overflow-hidden mb-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                    {zoneInjuries.map((inj, idx) => (
+                      <div
+                        key={inj.id}
+                        className="bg-white flex items-center gap-0"
+                        style={{ borderBottom: idx < zoneInjuries.length - 1 ? '0.5px solid #e5e5ea' : 'none' }}
+                      >
+                        <div
+                          className="w-1 self-stretch flex-shrink-0"
+                          style={{ background: SEVERITY_COLORS[inj.severity], minHeight: 60 }}
+                        />
                         <button
                           onClick={() => { setSelectedZone(null); setSelectedInjuryDetail(inj); }}
-                          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                          className="flex items-center gap-3 flex-1 min-w-0 text-left px-4 py-3.5"
                         >
-                          <div
-                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
-                            style={{ backgroundColor: `${SEVERITY_COLORS[inj.severity]}18`, color: SEVERITY_COLORS[inj.severity] }}
-                          >
-                            {inj.severity}
-                          </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-800">{INJURY_TYPES[inj.type].nl}</span>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[15px] font-medium" style={{ color: '#1c1c1e' }}>{INJURY_TYPES[inj.type].nl}</span>
                               <span
-                                className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                                className="text-[11px] px-2 py-0.5 rounded-full font-medium"
                                 style={{ backgroundColor: `${STATUS_COLORS[inj.status]}18`, color: STATUS_COLORS[inj.status] }}
                               >
                                 {STATUS_LABELS[inj.status]}
                               </span>
                               {inj.advices && inj.advices.length > 0 && <span className="text-xs">💬</span>}
                             </div>
-                            <div className="text-xs text-gray-400">{formatDate(inj.date)}</div>
+                            <div className="text-[13px]" style={{ color: '#8e8e93' }}>{formatDate(inj.date)}</div>
                           </div>
                         </button>
                         <button
                           onClick={() => setAdviceTarget(inj)}
-                          className="flex-shrink-0 text-xs px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                          className="flex-shrink-0 text-[13px] px-3 py-1.5 rounded-xl font-medium mr-3"
+                          style={{ background: 'rgba(48,209,88,0.12)', color: '#30d158' }}
                         >
                           💬 Advies
                         </button>
@@ -242,7 +274,8 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                   </div>
                   <button
                     onClick={() => setShowInjuryModal(true)}
-                    className="w-full py-3 bg-rugby-700 text-white font-semibold rounded-xl hover:bg-rugby-600 transition-colors text-sm"
+                    className="w-full py-3.5 font-semibold rounded-xl text-[15px] text-white"
+                    style={{ background: '#30d158' }}
                   >
                     + Nieuwe blessure
                   </button>
@@ -252,7 +285,7 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
           );
         })()}
 
-        {/* InjuryModal for new injury (write access) */}
+        {/* InjuryModal for new injury */}
         {selectedZone && selectedPerson.permission === 'write' && showInjuryModal && (
           <InjuryModal
             zoneId={selectedZone}
@@ -268,8 +301,7 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                 updatedAt: new Date().toISOString(),
               };
               const updatedInjuries = [...currentInjuries, newInjury];
-              
-              // Push to remote
+
               const API_BASE = 'https://injure-sync.jeanpaul.workers.dev';
               const encrypted = await encryptData(updatedInjuries, selectedPerson.encryptionKey);
               await fetch(`${API_BASE}/sync`, {
@@ -278,7 +310,6 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                 body: JSON.stringify({ ownerId: selectedPerson.ownerId, encryptedData: encrypted }),
               });
 
-              // Update local view
               setPersonData(prev => ({
                 ...prev,
                 [selectedPerson.ownerId]: {
@@ -337,18 +368,21 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
 
         {/* Stats bar */}
         {data && !data.error && (
-          <div className="px-4 pb-4 pt-2 border-t border-gray-100">
-            <div className="flex justify-center gap-6 text-sm text-gray-500">
-              <span>
-                <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5" />
+          <div
+            className="px-4 pb-3 pt-2 mx-0"
+            style={{ borderTop: '0.5px solid #e5e5ea', background: '#fff' }}
+          >
+            <div className="flex justify-center gap-5 text-[13px]" style={{ color: '#8e8e93' }}>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: '#ff453a' }} />
                 {data.injuries.filter(i => i.status === 'active').length} actief
               </span>
-              <span>
-                <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5" />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: '#ff9f0a' }} />
                 {data.injuries.filter(i => i.status === 'recovering').length} herstellend
               </span>
-              <span>
-                <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: '#30d158' }} />
                 {data.injuries.filter(i => i.status === 'healed').length} genezen
               </span>
             </div>
@@ -361,58 +395,68 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
         {personView === 'logboek' && (
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
             {!data || data.injuries.length === 0 ? (
-              <div className="text-center py-16 text-gray-400">
-                <div className="text-4xl mb-3">🏉</div>
-                <p className="text-sm">Geen blessures gevonden</p>
+              <div className="text-center py-16" style={{ color: '#8e8e93' }}>
+                <div className="text-4xl mb-3">📋</div>
+                <p className="text-[15px]">Geen blessures gevonden</p>
               </div>
             ) : (
-              [...data.injuries]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map(injury => {
-                  const zone = getBodyZone(injury.bodyZoneId);
-                  const formatDate = (s: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(s));
-                  return (
-                    <button
-                      key={injury.id}
-                      onClick={() => setSelectedInjuryDetail(injury)}
-                      className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 flex items-center gap-3 transition-colors text-left shadow-sm border border-gray-200"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${SEVERITY_COLORS[injury.severity]}18` }}
+              <div className="rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                {[...data.injuries]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((injury, idx, arr) => {
+                    const zone = getBodyZone(injury.bodyZoneId);
+                    const formatDate = (s: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(s));
+                    return (
+                      <button
+                        key={injury.id}
+                        onClick={() => setSelectedInjuryDetail(injury)}
+                        className="w-full bg-white flex items-center gap-0 text-left transition-colors active:bg-gray-50"
+                        style={{ borderBottom: idx < arr.length - 1 ? '0.5px solid #e5e5ea' : 'none' }}
                       >
-                        <span className="text-lg font-bold" style={{ color: SEVERITY_COLORS[injury.severity] }}>
-                          {injury.severity}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {zone?.nameNl || injury.bodyZoneId}
-                          </span>
-                          <span
-                            className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0"
-                            style={{ backgroundColor: `${STATUS_COLORS[injury.status]}18`, color: STATUS_COLORS[injury.status] }}
+                        <div
+                          className="w-1 self-stretch flex-shrink-0"
+                          style={{ background: SEVERITY_COLORS[injury.severity], minHeight: 60 }}
+                        />
+                        <div className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3.5">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                            style={{
+                              backgroundColor: `${SEVERITY_COLORS[injury.severity]}18`,
+                              color: SEVERITY_COLORS[injury.severity],
+                            }}
                           >
-                            {STATUS_LABELS[injury.status]}
-                          </span>
-                          {injury.advices && injury.advices.length > 0 && <span className="text-xs">💬</span>}
+                            {injury.severity}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[15px] font-medium truncate" style={{ color: '#1c1c1e' }}>
+                                {zone?.nameNl || injury.bodyZoneId}
+                              </span>
+                              <span
+                                className="text-[11px] px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+                                style={{ backgroundColor: `${STATUS_COLORS[injury.status]}18`, color: STATUS_COLORS[injury.status] }}
+                              >
+                                {STATUS_LABELS[injury.status]}
+                              </span>
+                              {injury.advices && injury.advices.length > 0 && <span className="text-xs">💬</span>}
+                            </div>
+                            <div className="text-[13px]" style={{ color: '#8e8e93' }}>
+                              {INJURY_TYPES[injury.type].nl}
+                              {injury.subLocation && ` · ${injury.subLocation}`}
+                              {' · '}{formatDate(injury.date)}
+                            </div>
+                          </div>
+                          <div style={{ color: '#c7c7cc' }} className="flex-shrink-0">›</div>
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
-                          {INJURY_TYPES[injury.type].nl}
-                          {injury.subLocation && ` · ${injury.subLocation}`}
-                          {' · '}{formatDate(injury.date)}
-                        </div>
-                      </div>
-                      <div className="text-gray-300 flex-shrink-0">›</div>
-                    </button>
-                  );
-                })
+                      </button>
+                    );
+                  })}
+              </div>
             )}
           </div>
         )}
 
-        {/* Injury detail modal (from logboek tap) */}
+        {/* Injury detail modal */}
         {selectedInjuryDetail && (
           <InjuryDetail
             injury={selectedInjuryDetail}
@@ -433,12 +477,15 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
 
   // List view
   return (
-    <div className="h-full flex flex-col px-4 pt-4">
-      <h1 className="text-lg font-bold text-gray-900 mb-1">Volgend</h1>
-      <p className="text-xs text-gray-400 mb-4">Tik op een persoon om hun blessures te bekijken</p>
+    <div className="h-full flex flex-col px-4 pt-4" style={{ background: '#f2f2f7' }}>
+      <h1 className="text-2xl font-bold mb-1" style={{ color: '#1c1c1e' }}>Volgend</h1>
+      <p className="text-[13px] mb-5" style={{ color: '#8e8e93' }}>Tik op een persoon om hun blessures te bekijken</p>
 
-      <div className="space-y-3 overflow-y-auto flex-1">
-        {watching.map(entry => {
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+      >
+        {watching.map((entry, idx) => {
           const data = personData[entry.ownerId];
           const label = entry.label ?? `Speler ${entry.ownerId.slice(0, 8)}`;
           const activeCount = data?.injuries.filter(i => i.status !== 'healed').length ?? 0;
@@ -450,17 +497,27 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                 setSelectedPerson(entry);
                 if (!data) fetchPerson(entry);
               }}
-              className="w-full text-left bg-white border border-gray-200 rounded-2xl px-4 py-4 flex items-center gap-4 active:bg-gray-50 transition-colors shadow-sm"
+              className="w-full text-left bg-white flex items-center gap-4 px-4 py-4 transition-colors active:bg-gray-50"
+              style={{ borderBottom: idx < watching.length - 1 ? '0.5px solid #e5e5ea' : 'none' }}
             >
-              {/* Avatar */}
-              <div className="w-11 h-11 rounded-full bg-rugby-700 bg-opacity-10 flex items-center justify-center text-xl flex-shrink-0">
-                🧑‍🦽
+              {/* Avatar with initials */}
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                style={{ background: '#30d158' }}
+              >
+                {getInitials(label)}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{label}</p>
-                <p className="text-xs text-gray-400">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-[15px] truncate" style={{ color: '#1c1c1e' }}>{label}</p>
+                  {/* Connected dot */}
+                  {data && !data.error && (
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#30d158' }} />
+                  )}
+                </div>
+                <p className="text-[12px]" style={{ color: '#8e8e93' }}>
                   {entry.permission === 'read' ? '👀 Meekijken' : '✏️ Meewerken'}
                 </p>
               </div>
@@ -468,27 +525,30 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
               {/* Status */}
               <div className="text-right flex-shrink-0">
                 {data?.loading ? (
-                  <span className="text-xs text-amber-500">Ophalen...</span>
+                  <span className="text-[12px]" style={{ color: '#ff9f0a' }}>Ophalen...</span>
                 ) : data?.error ? (
-                  <span className="text-xs text-red-500">Fout</span>
+                  <span className="text-[12px]" style={{ color: '#ff453a' }}>Fout</span>
                 ) : data ? (
                   <>
                     {activeCount > 0 ? (
-                      <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 text-xs font-semibold px-2 py-1 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                      <span
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-1 rounded-full"
+                        style={{ background: 'rgba(255,69,58,0.1)', color: '#ff453a' }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff453a' }} />
                         {activeCount} blessure{activeCount !== 1 ? 's' : ''}
                       </span>
                     ) : (
-                      <span className="text-xs text-green-600 font-medium">✓ Geen actief</span>
+                      <span className="text-[12px] font-medium" style={{ color: '#30d158' }}>✓ Geen actief</span>
                     )}
-                    <p className="text-[10px] text-gray-400 mt-0.5">{timeAgo(data.updatedAt)}</p>
+                    <p className="text-[11px] mt-0.5" style={{ color: '#aeaeb2' }}>{timeAgo(data.updatedAt)}</p>
                   </>
                 ) : (
-                  <span className="text-xs text-gray-300">—</span>
+                  <span className="text-[12px]" style={{ color: '#aeaeb2' }}>—</span>
                 )}
               </div>
 
-              <span className="text-gray-300 text-lg">›</span>
+              <span style={{ color: '#c7c7cc' }} className="text-lg">›</span>
             </button>
           );
         })}

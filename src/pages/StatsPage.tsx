@@ -57,38 +57,78 @@ export default function StatsPage({ injuries }: StatsPageProps) {
 
   const maxRegionCount = Math.max(...Object.values(regionCounts), 1);
 
-  const card = "bg-white rounded-xl p-4 mb-4 shadow-sm border border-surface-600";
-  const cardLabel = "text-sm font-medium text-gray-600 mb-3";
+  // Apple-style card
+  const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+    <div
+      className={`bg-white rounded-2xl p-4 mb-4 ${className}`}
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+    >
+      {children}
+    </div>
+  );
+
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <div
+      className="text-[11px] font-semibold uppercase tracking-wider mb-3"
+      style={{ color: '#8e8e93' }}
+    >
+      {children}
+    </div>
+  );
 
   return (
-    <div className="h-full overflow-y-auto px-4 pt-3 pb-4">
-      <h1 className="text-lg font-bold text-gray-900 mb-4">Statistieken</h1>
+    <div className="h-full overflow-y-auto px-4 pt-4 pb-4" style={{ background: '#f2f2f7' }}>
+      {/* Apple Health large title */}
+      <h1 className="text-2xl font-bold mb-5" style={{ color: '#1c1c1e' }}>Statistieken</h1>
 
       {injuries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-20" style={{ color: '#8e8e93' }}>
           <div className="text-4xl mb-3">📊</div>
-          <p className="text-sm">Nog geen blessures geregistreerd</p>
-          <p className="text-xs mt-1 text-gray-300">Begin met het loggen van blessures op de Body Map</p>
+          <p className="text-[15px]">Nog geen blessures geregistreerd</p>
+          <p className="text-[13px] mt-1" style={{ color: '#aeaeb2' }}>Begin met het loggen van blessures op de Body Map</p>
         </div>
       ) : (
         <>
-          {/* Overview Cards */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-600">
-              <div className="text-2xl font-bold text-gray-900">{injuries.length}</div>
-              <div className="text-xs text-gray-400">Totaal Blessures</div>
+          {/* Overview — 2x2 grid with large numbers */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div
+              className="bg-white rounded-2xl p-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div className="text-3xl font-bold mb-0.5" style={{ color: '#30d158' }}>{injuries.length}</div>
+              <div className="text-[12px]" style={{ color: '#8e8e93' }}>Totaal Blessures</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-600">
-              <div className="text-2xl font-bold" style={{ color: SEVERITY_COLORS[Math.round(parseFloat(avgSeverity)) as 1|2|3|4|5] || '#1a1a1a' }}>
+            <div
+              className="bg-white rounded-2xl p-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div
+                className="text-3xl font-bold mb-0.5"
+                style={{ color: SEVERITY_COLORS[Math.round(parseFloat(avgSeverity)) as 1|2|3|4|5] || '#1c1c1e' }}
+              >
                 {avgSeverity}
               </div>
-              <div className="text-xs text-gray-400">Gem. Ernst</div>
+              <div className="text-[12px]" style={{ color: '#8e8e93' }}>Gem. Ernst</div>
+            </div>
+            <div
+              className="bg-white rounded-2xl p-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div className="text-3xl font-bold mb-0.5" style={{ color: STATUS_COLORS['active'] }}>{activeCount}</div>
+              <div className="text-[12px]" style={{ color: '#8e8e93' }}>Actief</div>
+            </div>
+            <div
+              className="bg-white rounded-2xl p-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div className="text-3xl font-bold mb-0.5" style={{ color: '#30d158' }}>{healedCount}</div>
+              <div className="text-[12px]" style={{ color: '#8e8e93' }}>Genezen</div>
             </div>
           </div>
 
           {/* Status overview */}
-          <div className={card}>
-            <div className={cardLabel}>Status Overzicht</div>
+          <Card>
+            <SectionLabel>Status Overzicht</SectionLabel>
             <div className="flex gap-3">
               {(['active', 'recovering', 'healed'] as const).map(status => {
                 const count = status === 'active' ? activeCount : status === 'recovering' ? recoveringCount : healedCount;
@@ -96,13 +136,16 @@ export default function StatsPage({ injuries }: StatsPageProps) {
                 return (
                   <div key={status} className="flex-1 text-center">
                     <div
-                      className="text-xl font-bold"
+                      className="text-2xl font-bold"
                       style={{ color: STATUS_COLORS[status] }}
                     >
                       {count}
                     </div>
-                    <div className="text-[10px] text-gray-400 mb-1.5">{STATUS_LABELS[status]}</div>
-                    <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden">
+                    <div className="text-[11px] mb-2" style={{ color: '#8e8e93' }}>{STATUS_LABELS[status]}</div>
+                    <div
+                      className="h-1.5 rounded-full overflow-hidden"
+                      style={{ background: '#f2f2f7' }}
+                    >
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -115,91 +158,136 @@ export default function StatsPage({ injuries }: StatsPageProps) {
                 );
               })}
             </div>
-          </div>
+          </Card>
 
           {/* Body Region Chart */}
-          <div className={card}>
-            <div className={cardLabel}>Per Lichaamsdeel</div>
-            <div className="space-y-2.5">
+          <Card>
+            <SectionLabel>Per Lichaamsdeel</SectionLabel>
+            <div className="space-y-3">
               {Object.entries(regionLabels).map(([region, label]) => {
                 const count = regionCounts[region] || 0;
                 const pct = (count / maxRegionCount) * 100;
                 return (
                   <div key={region}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-700">{label}</span>
-                      <span className="text-gray-400">{count}</span>
+                    <div className="flex justify-between text-[13px] mb-1.5">
+                      <span style={{ color: '#1c1c1e' }}>{label}</span>
+                      <span style={{ color: '#8e8e93' }}>{count}</span>
                     </div>
-                    <div className="h-2 bg-surface-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-2 rounded-full overflow-hidden"
+                      style={{ background: '#f2f2f7' }}
+                    >
                       <div
-                        className="h-full bg-rugby-600 rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pct}%`, background: '#30d158' }}
                       />
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </Card>
 
           {/* Top Body Parts */}
           {topBodyParts.length > 0 && (
-            <div className={card}>
-              <div className={cardLabel}>Meest Kwetsbare Zones</div>
-              <div className="space-y-2">
-                {topBodyParts.map(([zoneId, count], i) => {
-                  const zone = getBodyZone(zoneId);
-                  return (
-                    <div key={zoneId} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-4">{i + 1}.</span>
-                      <span className="text-sm text-gray-700 flex-1">{zone?.nameNl || zoneId}</span>
-                      <span className="text-sm font-medium text-rugby-700">{count}×</span>
-                    </div>
-                  );
-                })}
+            <div
+              className="bg-white rounded-2xl overflow-hidden mb-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div className="px-4 pt-4 pb-2">
+                <SectionLabel>Meest Kwetsbare Zones</SectionLabel>
               </div>
+              {topBodyParts.map(([zoneId, count], i) => {
+                const zone = getBodyZone(zoneId);
+                return (
+                  <div
+                    key={zoneId}
+                    className="flex items-center gap-3 px-4 py-3"
+                    style={{ borderTop: i > 0 ? '0.5px solid #e5e5ea' : 'none' }}
+                  >
+                    <span className="text-[13px] w-5 text-center" style={{ color: '#aeaeb2' }}>{i + 1}</span>
+                    <span className="text-[15px] flex-1" style={{ color: '#1c1c1e' }}>{zone?.nameNl || zoneId}</span>
+                    <span className="text-[15px] font-semibold" style={{ color: '#30d158' }}>{count}×</span>
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* Injury Types */}
           {topTypes.length > 0 && (
-            <div className={card}>
-              <div className={cardLabel}>Type Blessures</div>
-              <div className="space-y-2">
-                {topTypes.map(([type, count]) => {
-                  const typeInfo = INJURY_TYPES[type as keyof typeof INJURY_TYPES];
-                  return (
-                    <div key={type} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{typeInfo?.nl || type}</span>
-                      <span className="text-sm font-medium text-rugby-700">{count}×</span>
-                    </div>
-                  );
-                })}
+            <div
+              className="bg-white rounded-2xl overflow-hidden mb-4"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+            >
+              <div className="px-4 pt-4 pb-2">
+                <SectionLabel>Type Blessures</SectionLabel>
               </div>
+              {topTypes.map(([type, count], i) => {
+                const typeInfo = INJURY_TYPES[type as keyof typeof INJURY_TYPES];
+                return (
+                  <div
+                    key={type}
+                    className="flex items-center justify-between px-4 py-3"
+                    style={{ borderTop: i > 0 ? '0.5px solid #e5e5ea' : 'none' }}
+                  >
+                    <span className="text-[15px]" style={{ color: '#1c1c1e' }}>{typeInfo?.nl || type}</span>
+                    <span className="text-[15px] font-semibold" style={{ color: '#30d158' }}>{count}×</span>
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* Context Breakdown */}
-          <div className={card}>
-            <div className={cardLabel}>Context</div>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
-                <div className="text-lg">🏋️</div>
-                <div className="text-lg font-bold text-gray-900">{contextCounts.training}</div>
-                <div className="text-[10px] text-gray-400">Training</div>
-              </div>
-              <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
-                <div className="text-lg">🏉</div>
-                <div className="text-lg font-bold text-gray-900">{contextCounts.wedstrijd}</div>
-                <div className="text-[10px] text-gray-400">Wedstrijd</div>
-              </div>
-              <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
-                <div className="text-lg">📋</div>
-                <div className="text-lg font-bold text-gray-900">{contextCounts.overig}</div>
-                <div className="text-[10px] text-gray-400">Overig</div>
-              </div>
+          <Card>
+            <SectionLabel>Context</SectionLabel>
+            <div className="flex gap-3">
+              {[
+                { emoji: '🏋️', count: contextCounts.training, label: 'Training' },
+                { emoji: '🏉', count: contextCounts.wedstrijd, label: 'Wedstrijd' },
+                { emoji: '📋', count: contextCounts.overig, label: 'Overig' },
+              ].map(item => (
+                <div
+                  key={item.label}
+                  className="flex-1 rounded-xl p-3 text-center"
+                  style={{ background: '#f2f2f7' }}
+                >
+                  <div className="text-xl mb-1">{item.emoji}</div>
+                  <div className="text-xl font-bold" style={{ color: '#1c1c1e' }}>{item.count}</div>
+                  <div className="text-[11px]" style={{ color: '#8e8e93' }}>{item.label}</div>
+                </div>
+              ))}
             </div>
-          </div>
+          </Card>
+
+          {/* Recovery stat */}
+          {healedCount > 0 && (
+            <Card>
+              <SectionLabel>Herstel Ratio</SectionLabel>
+              <div className="flex items-center gap-4">
+                <div className="text-3xl font-bold" style={{ color: '#30d158' }}>
+                  {Math.round((healedCount / injuries.length) * 100)}%
+                </div>
+                <div>
+                  <div className="text-[15px]" style={{ color: '#1c1c1e' }}>Genezen</div>
+                  <div className="text-[13px]" style={{ color: '#8e8e93' }}>{healedCount} van {injuries.length} blessures</div>
+                </div>
+              </div>
+              <div
+                className="h-2 rounded-full overflow-hidden mt-3"
+                style={{ background: '#f2f2f7' }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(healedCount / injuries.length) * 100}%`,
+                    background: '#30d158',
+                  }}
+                />
+              </div>
+            </Card>
+          )}
         </>
       )}
     </div>

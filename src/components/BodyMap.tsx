@@ -143,8 +143,8 @@ export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProp
     let stroke: string;
 
     if (isActive) {
-      fill = 'rgba(45,95,45,0.4)';
-      stroke = '#2d5f2d';
+      fill = 'rgba(48,209,88,0.3)';
+      stroke = '#30d158';
     } else if (sev !== null) {
       // Calculate recency-based opacity
       const opacity = recencyOpacity(zoneInjuries, refDate);
@@ -173,7 +173,7 @@ export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProp
   const backFill = (): string => {
     const zoneInjuries = injuryMap.get('back') ?? [];
     const sev = worstSeverity(zoneInjuries);
-    if (activeZone === 'back') return 'rgba(45,95,45,0.25)';
+    if (activeZone === 'back') return 'rgba(48,209,88,0.25)';
     if (sev !== null) {
       const opacity = recencyOpacity(zoneInjuries, refDate);
       return `rgba(${severityRGB(sev)},${opacity.toFixed(2)})`;
@@ -184,7 +184,7 @@ export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProp
   const backStroke = (): string => {
     const zoneInjuries = injuryMap.get('back') ?? [];
     const sev = worstSeverity(zoneInjuries);
-    if (activeZone === 'back') return '#2d5f2d';
+    if (activeZone === 'back') return '#30d158';
     if (sev !== null) return severityStroke(sev);
     return '#b8c0b8';
   };

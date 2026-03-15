@@ -62,7 +62,6 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
     const maxTime = maxDate.getTime();
     const t = minTime + (sliderValue / 100) * (maxTime - minTime);
     const d = new Date(t);
-    // Set to end of that day so injuries ON that date are included
     d.setHours(23, 59, 59, 999);
     return d;
   }, [sliderValue, minDate, maxDate, hasInjuries]);
@@ -80,23 +79,35 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
   }, [injuries, timelineDate]);
 
   return (
-    <div className="h-full flex flex-col px-4 pt-3 pb-2">
-      <div className="text-center mb-2">
-        <h1 className="text-lg font-bold text-gray-900">Blessure Logboek</h1>
-        <p className="text-xs text-gray-400">Tik op een lichaamsdeel om een blessure te registreren</p>
+    <div className="h-full flex flex-col px-4 pt-4 pb-2" style={{ background: '#f2f2f7' }}>
+      {/* Apple Health-style large title — left aligned */}
+      <div className="mb-3">
+        <h1 className="text-2xl font-bold" style={{ color: '#1c1c1e' }}>Body Map</h1>
+        <p className="text-[13px] mt-0.5" style={{ color: '#8e8e93' }}>Tik op een lichaamsdeel om een blessure te registreren</p>
       </div>
 
       {/* Tijdreis banner — shown when not at "today" */}
       {hasInjuries && !isToday && (
         <div
-          className="mb-2 text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg py-1.5 px-3"
-          style={{ transition: 'opacity 0.3s ease' }}
+          className="mb-3 text-center text-xs rounded-2xl py-2 px-3"
+          style={{
+            background: 'rgba(255,159,10,0.12)',
+            color: '#c97007',
+            transition: 'opacity 0.3s ease',
+          }}
         >
           🕐 Je bekijkt: {formatDutchDate(timelineDate)}
         </div>
       )}
 
-      <div className="flex-1 min-h-0">
+      {/* Body map — subtle radial gradient background */}
+      <div
+        className="flex-1 min-h-0 rounded-2xl overflow-hidden"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 40%, #e8f0ff 0%, #f2f2f7 70%)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+        }}
+      >
         <BodyMap
           injuries={filteredInjuries}
           onZoneClick={setSelectedZone}
@@ -108,13 +119,14 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
       {hasInjuries && (
         <div className="mt-3 mb-1 px-1">
           {/* Date label centered above thumb */}
-          <div className="relative h-5 mb-1">
+          <div className="relative h-5 mb-1.5">
             <span
-              className="absolute text-xs font-medium text-gray-600 whitespace-nowrap"
+              className="absolute text-xs font-medium whitespace-nowrap"
               style={{
                 left: `${sliderValue}%`,
                 transform: 'translateX(-50%)',
                 transition: 'left 0.1s ease',
+                color: '#1c1c1e',
               }}
             >
               {formatDutchDate(timelineDate)}
@@ -133,18 +145,18 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
             style={{
               WebkitAppearance: 'none',
               appearance: 'none',
-              height: '4px',
+              height: '3px',
               borderRadius: '2px',
-              background: `linear-gradient(to right, #2d5f2d ${sliderValue}%, #e5e7eb ${sliderValue}%)`,
+              background: `linear-gradient(to right, #30d158 ${sliderValue}%, #d1d1d6 ${sliderValue}%)`,
               outline: 'none',
               cursor: 'pointer',
             }}
           />
 
           {/* Labels below */}
-          <div className="flex justify-between mt-1 text-xs text-gray-400">
+          <div className="flex justify-between mt-1.5 text-[11px]" style={{ color: '#8e8e93' }}>
             <span>Tijdreis</span>
-            <span className={isToday ? 'text-green-700 font-medium' : ''}>Vandaag</span>
+            <span style={{ color: isToday ? '#30d158' : '#8e8e93', fontWeight: isToday ? '600' : '400' }}>Vandaag</span>
           </div>
         </div>
       )}
@@ -175,52 +187,66 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
           <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedZone(null)}>
             <div className="absolute inset-0 bg-black/40 animate-fade-in" />
             <div
-              className="relative w-full max-w-lg bg-white rounded-t-2xl animate-slide-up max-h-[80vh] overflow-y-auto shadow-2xl"
+              className="relative w-full max-w-lg bg-white animate-slide-up max-h-[80vh] overflow-y-auto"
+              style={{ borderRadius: '24px 24px 0 0', boxShadow: '0 -4px 30px rgba(0,0,0,0.12)' }}
               onClick={e => e.stopPropagation()}
             >
+              {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 bg-gray-200 rounded-full" />
+                <div className="w-9 h-1 rounded-full" style={{ background: '#d1d1d6' }} />
               </div>
-              <div className="px-5 pb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">{zone?.nameNl || selectedZone}</h2>
-                  <button onClick={() => setSelectedZone(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+              <div className="px-5 pb-8">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-bold" style={{ color: '#1c1c1e' }}>{zone?.nameNl || selectedZone}</h2>
+                  <button
+                    onClick={() => setSelectedZone(null)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium"
+                    style={{ background: '#e5e5ea', color: '#8e8e93' }}
+                  >
+                    ✕
+                  </button>
                 </div>
-                <div className="space-y-2 mb-4">
-                  {zoneInjuries.map(inj => (
+
+                {/* Grouped injury cards */}
+                <div className="rounded-2xl overflow-hidden mb-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                  {zoneInjuries.map((inj, idx) => (
                     <button
                       key={inj.id}
                       onClick={() => { setSelectedZone(null); setSelectedInjuryDetail(inj); }}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors"
+                      className="w-full bg-white flex items-center gap-3 text-left px-4 py-3.5 transition-colors active:bg-gray-50"
+                      style={{
+                        borderBottom: idx < zoneInjuries.length - 1 ? '0.5px solid #e5e5ea' : 'none',
+                      }}
                     >
+                      {/* Left accent bar for severity */}
                       <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
-                        style={{ backgroundColor: `${SEVERITY_COLORS[inj.severity]}18`, color: SEVERITY_COLORS[inj.severity] }}
-                      >
-                        {inj.severity}
-                      </div>
+                        className="w-1 self-stretch rounded-full flex-shrink-0"
+                        style={{ background: SEVERITY_COLORS[inj.severity], minHeight: 40 }}
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-800">{INJURY_TYPES[inj.type].nl}</span>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[15px] font-medium" style={{ color: '#1c1c1e' }}>{INJURY_TYPES[inj.type].nl}</span>
                           <span
-                            className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                            className="text-[11px] px-2 py-0.5 rounded-full font-medium"
                             style={{ backgroundColor: `${STATUS_COLORS[inj.status]}18`, color: STATUS_COLORS[inj.status] }}
                           >
                             {STATUS_LABELS[inj.status]}
                           </span>
                           {inj.advices && inj.advices.length > 0 && <span className="text-xs">💬</span>}
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {inj.subLocation && `${inj.subLocation} · `}{formatDate(inj.date)}
+                        <div className="text-[13px]" style={{ color: '#8e8e93' }}>
+                          Ernst {inj.severity}/5{inj.subLocation && ` · ${inj.subLocation}`} · {formatDate(inj.date)}
                         </div>
                       </div>
-                      <div className="text-gray-300 flex-shrink-0">›</div>
+                      <div style={{ color: '#c7c7cc' }}>›</div>
                     </button>
                   ))}
                 </div>
+
                 <button
                   onClick={() => setShowNewInjury(true)}
-                  className="w-full py-3 bg-rugby-700 text-white font-semibold rounded-xl hover:bg-rugby-600 transition-colors text-sm"
+                  className="w-full py-3.5 font-semibold rounded-xl text-[15px] text-white transition-colors"
+                  style={{ background: '#30d158' }}
                 >
                   + Nieuwe blessure
                 </button>
@@ -246,33 +272,6 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
           onClose={() => setSelectedInjuryDetail(null)}
         />
       )}
-
-      {/* Slider thumb styling */}
-      <style>{`
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #2d5f2d;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-          transition: transform 0.1s ease;
-        }
-        input[type='range']::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-        }
-        input[type='range']::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #2d5f2d;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-        }
-      `}</style>
     </div>
   );
 }
