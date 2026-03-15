@@ -11,7 +11,7 @@ interface ShareModalProps {
 const EXPIRY_SECONDS = 5 * 60; // 5 minutes
 
 export default function ShareModal({ sync, onClose }: ShareModalProps) {
-  const { isSharing, watching, startSharing, stopSharing, connectToCode, stopWatching } = sync;
+  const { isSharing, links, watching, startSharing, stopSharing, connectToCode, stopWatching, revokeLink } = sync;
 
   // Sharing section state
   const [shareCode, setShareCode] = useState<string | null>(null);
@@ -178,6 +178,37 @@ export default function ShareModal({ sync, onClose }: ShareModalProps) {
                       {starting ? 'Bezig...' : 'Genereer code'}
                     </button>
                     {startError && <p className="mt-2 text-xs text-red-600">{startError}</p>}
+                  </div>
+                )}
+
+                {/* Incoming links — who is following your data */}
+                {links.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 mb-2">Deelt met ({links.length})</p>
+                    <div className="space-y-2">
+                      {links.map(link => (
+                        <div
+                          key={link.linkId}
+                          className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              Verbinding {link.linkId.slice(0, 8)}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {link.permission === 'read' ? '👀 Meekijken' : '✏️ Meewerken'} ·{' '}
+                              {new Date(link.connectedAt).toLocaleDateString('nl-NL')}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => revokeLink(link.linkId)}
+                            className="text-xs text-red-500 hover:text-red-700 font-medium ml-3"
+                          >
+                            Intrekken
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

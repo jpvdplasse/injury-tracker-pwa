@@ -150,6 +150,36 @@ export function useSync(injuries: Injury[]) {
     return () => clearTimeout(timer);
   }, [injuries, isSharing, pushData]);
 
+  /** Fetch who is following our data */
+  const fetchLinks = useCallback(async () => {
+    if (!ownerId) return;
+    try {
+      const res = await fetch(`${API_BASE}/links/${ownerId}`);
+      if (!res.ok) return;
+      const data = await res.json() as { links: SyncLink[] };
+      setLinks(data.links);
+      save(KEY_LINKS, data.links);
+    } catch {
+      // ignore
+    }
+  }, [ownerId]);
+
+  /** Revoke a specific link */
+  const revokeLink = useCallback(async (linkId: string) => {
+    if (!ownerId) return;
+    await fetch(`${API_BASE}/link/${ownerId}/${linkId}`, { method: 'DELETE' });
+    setLinks(prev => {
+      const updated = prev.filter(l => l.linkId !== linkId);
+      save(KEY_LINKS, updated);
+      return updated;
+    });
+  }, [ownerId]);
+
+  // Fetch links on mount when sharing
+  useEffect(() => {
+    if (isSharing) fetchLinks();
+  }, [isSharing, fetchLinks]);
+
   return {
     isSharing,
     ownerId,
@@ -162,5 +192,7 @@ export function useSync(injuries: Injury[]) {
     stopWatching,
     pushData,
     pullData,
+    fetchLinks,
+    revokeLink,
   };
 }
