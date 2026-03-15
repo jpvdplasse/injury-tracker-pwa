@@ -352,7 +352,7 @@ export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProp
 
           {/* ── ADVICE BADGES — 💬 if any active/recovering injury has advice ── */}
           {Array.from(injuryMap.entries()).map(([zoneId, zoneInjuries]) => {
-            const hasAdvice = zoneInjuries.some(i => i.advice && (i.status === 'active' || i.status === 'recovering'));
+            const hasAdvice = zoneInjuries.some(i => i.advices && i.advices.length > 0 && (i.status === 'active' || i.status === 'recovering'));
             if (!hasAdvice) return null;
             const pos = zoneCenters[zoneId];
             if (!pos) return null;

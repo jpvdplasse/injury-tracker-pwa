@@ -10,7 +10,8 @@ interface AdviceModalProps {
 }
 
 export default function AdviceModal({ injury, advisorName, onSave, onClose }: AdviceModalProps) {
-  const [advice, setAdvice] = useState(injury.advice ?? '');
+  // Always start with empty text — we're adding a new advice, not editing the old one
+  const [advice, setAdvice] = useState('');
   const [saving, setSaving] = useState(false);
   const zone = getBodyZone(injury.bodyZoneId);
 

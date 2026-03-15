@@ -8,12 +8,32 @@ interface InjuryDetailProps {
   onUpdate: (id: string, updates: Partial<Injury>) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  readOnly?: boolean;
+  /** Show "Advies geven" button — caller handles the click */
+  onAdvice?: () => void;
 }
 
-export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelete, onClose }: InjuryDetailProps) {
+/** Backward-compat: get advices array even if injury has old single-advice fields */
+function getAdvices(injury: Injury): Array<{ text: string; date: string; by?: string }> {
+  if (injury.advices && injury.advices.length > 0) return injury.advices;
+  // Legacy fallback
+  const legacyAny = injury as unknown as Record<string, string | undefined>;
+  if (legacyAny['advice']) {
+    return [{
+      text: legacyAny['advice']!,
+      date: legacyAny['adviceDate'] ?? new Date().toISOString().slice(0, 10),
+      by: legacyAny['adviceBy'],
+    }];
+  }
+  return [];
+}
+
+export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelete, onClose, readOnly = false, onAdvice }: InjuryDetailProps) {
   const zone = getBodyZone(injury.bodyZoneId);
   const [recoveryNotes, setRecoveryNotes] = useState(injury.recoveryNotes);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const advices = getAdvices(injury);
 
   const formatDate = (dateStr: string) => {
     return new Intl.DateTimeFormat('nl-NL', {
@@ -112,20 +132,38 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
             </div>
           )}
 
-          {/* Advice Card */}
-          {injury.advice && (
-            <div className="mb-5 rounded-xl p-4 border border-green-200" style={{ borderLeftWidth: '4px', borderLeftColor: '#22c55e', background: '#f0fdf4' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-base">💬</span>
-                <span className="text-sm font-semibold text-green-800">
-                  {injury.adviceBy ? `Advies van ${injury.adviceBy}` : 'Advies van fysio'}
-                </span>
-                {injury.adviceDate && (
-                  <span className="text-xs text-green-500 ml-auto">{formatDate(injury.adviceDate)}</span>
-                )}
-              </div>
-              <p className="text-sm text-green-900 leading-relaxed">{injury.advice}</p>
+          {/* Advices timeline (newest first) */}
+          {advices.length > 0 && (
+            <div className="mb-5 space-y-3">
+              {[...advices]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map((adv, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-xl p-4 border border-green-200"
+                    style={{ borderLeftWidth: '4px', borderLeftColor: '#22c55e', background: '#f0fdf4' }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-base">💬</span>
+                      <span className="text-sm font-semibold text-green-800">
+                        {adv.by ? `Advies van ${adv.by}` : 'Advies van fysio'}
+                      </span>
+                      <span className="text-xs text-green-500 ml-auto">{formatDate(adv.date)}</span>
+                    </div>
+                    <p className="text-sm text-green-900 leading-relaxed">{adv.text}</p>
+                  </div>
+                ))}
             </div>
+          )}
+
+          {/* "Advies geven" button — only shown in readOnly mode if caller provides handler */}
+          {readOnly && onAdvice && (
+            <button
+              onClick={onAdvice}
+              className="w-full mb-5 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-colors text-sm"
+            >
+              💬 Advies geven
+            </button>
           )}
 
           {/* Status Progress */}
@@ -135,12 +173,14 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
               {statusFlow.map((status, i) => (
                 <div key={status} className="flex items-center flex-1">
                   <button
-                    onClick={() => onUpdateStatus(injury.id, status)}
+                    onClick={readOnly ? undefined : () => onUpdateStatus(injury.id, status)}
+                    disabled={readOnly}
                     className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
                       i <= currentIndex
                         ? 'text-white'
-                        : 'bg-surface-700 text-gray-400 hover:text-gray-700 border border-surface-600'
-                    }`}
+                        : 'bg-surface-700 text-gray-400 border border-surface-600' +
+                          (readOnly ? '' : ' hover:text-gray-700')
+                    } ${readOnly ? 'cursor-default' : ''}`}
                     style={i <= currentIndex ? {
                       backgroundColor: STATUS_COLORS[status],
                     } : undefined}
@@ -158,20 +198,28 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
           {/* Recovery Notes */}
           <div className="mb-5">
             <div className="text-sm text-gray-500 mb-2">Herstel Notities</div>
-            <textarea
-              value={recoveryNotes}
-              onChange={e => setRecoveryNotes(e.target.value)}
-              placeholder="Voeg herstel notities toe..."
-              rows={3}
-              className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors resize-none placeholder:text-gray-400"
-            />
-            {recoveryNotes !== injury.recoveryNotes && (
-              <button
-                onClick={handleSaveNotes}
-                className="mt-2 px-4 py-2 bg-rugby-700 text-white text-sm rounded-lg hover:bg-rugby-600 transition-colors"
-              >
-                Notities Opslaan
-              </button>
+            {readOnly ? (
+              <p className="text-sm text-gray-700 bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 min-h-[4rem]">
+                {injury.recoveryNotes || <span className="text-gray-400 italic">Geen herstel notities</span>}
+              </p>
+            ) : (
+              <>
+                <textarea
+                  value={recoveryNotes}
+                  onChange={e => setRecoveryNotes(e.target.value)}
+                  placeholder="Voeg herstel notities toe..."
+                  rows={3}
+                  className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors resize-none placeholder:text-gray-400"
+                />
+                {recoveryNotes !== injury.recoveryNotes && (
+                  <button
+                    onClick={handleSaveNotes}
+                    className="mt-2 px-4 py-2 bg-rugby-700 text-white text-sm rounded-lg hover:bg-rugby-600 transition-colors"
+                  >
+                    Notities Opslaan
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -184,29 +232,31 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
             </div>
           )}
 
-          {/* Delete */}
-          {!showDeleteConfirm ? (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="w-full py-3 text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
-            >
-              Blessure Verwijderen
-            </button>
-          ) : (
-            <div className="flex gap-2">
+          {/* Delete — hidden in readOnly mode */}
+          {!readOnly && (
+            !showDeleteConfirm ? (
               <button
-                onClick={() => { onDelete(injury.id); onClose(); }}
-                className="flex-1 py-3 bg-red-50 text-red-500 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full py-3 text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
               >
-                Bevestig Verwijderen
+                Blessure Verwijderen
               </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 bg-surface-700 text-gray-500 border border-surface-600 rounded-xl text-sm font-medium hover:text-gray-800 transition-colors"
-              >
-                Annuleren
-              </button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { onDelete(injury.id); onClose(); }}
+                  className="flex-1 py-3 bg-red-50 text-red-500 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                >
+                  Bevestig Verwijderen
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 bg-surface-700 text-gray-500 border border-surface-600 rounded-xl text-sm font-medium hover:text-gray-800 transition-colors"
+                >
+                  Annuleren
+                </button>
+              </div>
+            )
           )}
         </div>
       </div>

@@ -24,9 +24,11 @@ export interface Injury {
   status: InjuryStatus;
   recoveryNotes: string;
   recoveryDate: string | null;
-  advice?: string; // Advice from fysio/coach (via write-access sync)
-  adviceDate?: string; // ISO date when advice was given
-  adviceBy?: string; // label of person who gave advice
+  advices?: Array<{
+    text: string;
+    date: string;  // ISO date
+    by?: string;   // who gave the advice
+  }>;
   createdAt: string;
   updatedAt: string;
 }

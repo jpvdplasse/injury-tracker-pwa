@@ -208,7 +208,7 @@ export default function BodyMapPage({ injuries, onAddInjury, onUpdateStatus, onU
                           >
                             {STATUS_LABELS[inj.status]}
                           </span>
-                          {inj.advice && <span className="text-xs">💬</span>}
+                          {inj.advices && inj.advices.length > 0 && <span className="text-xs">💬</span>}
                         </div>
                         <div className="text-xs text-gray-400">
                           {inj.subLocation && `${inj.subLocation} · `}{formatDate(inj.date)}

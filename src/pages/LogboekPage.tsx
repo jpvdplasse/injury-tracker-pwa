@@ -109,8 +109,8 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
                       {injury.subLocation && ` · ${injury.subLocation}`}
                       {' · '}{formatDate(injury.date)}
                     </span>
-                    {injury.advice && (
-                      <span title={`Advies: ${injury.advice}`} className="text-xs">💬</span>
+                    {injury.advices && injury.advices.length > 0 && (
+                      <span title={`${injury.advices.length} advies/adviezen`} className="text-xs">💬</span>
                     )}
                   </div>
                 </div>

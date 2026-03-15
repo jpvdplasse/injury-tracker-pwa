@@ -77,10 +77,15 @@ export function useInjuries() {
       const merged = prev.map(local => {
         const remote = remoteInjuries.find(r => r.id === local.id);
         if (!remote) return local;
-        // Merge advice fields from remote if local doesn't have them or remote is newer
-        if (remote.advice && remote.advice !== local.advice) {
+
+        // Merge advices arrays: combine both, deduplicate by date+text
+        const localAdvices = local.advices ?? [];
+        const remoteAdvices = remote.advices ?? [];
+        const seen = new Set(localAdvices.map(a => `${a.date}|${a.text}`));
+        const newAdvices = remoteAdvices.filter(a => !seen.has(`${a.date}|${a.text}`));
+        if (newAdvices.length > 0) {
           changed = true;
-          return { ...local, advice: remote.advice, adviceDate: remote.adviceDate, adviceBy: remote.adviceBy };
+          return { ...local, advices: [...localAdvices, ...newAdvices] };
         }
         return local;
       });

@@ -226,7 +226,7 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                               >
                                 {STATUS_LABELS[inj.status]}
                               </span>
-                              {inj.advice && <span className="text-xs">💬</span>}
+                              {inj.advices && inj.advices.length > 0 && <span className="text-xs">💬</span>}
                             </div>
                             <div className="text-xs text-gray-400">{formatDate(inj.date)}</div>
                           </div>
@@ -301,9 +301,14 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
             advisorName={selectedPerson.label ?? undefined}
             onSave={async (adviceText) => {
               const currentInjuries = data?.injuries ?? [];
+              const newAdvice = {
+                text: adviceText,
+                date: new Date().toISOString().slice(0, 10),
+                by: selectedPerson.label ?? undefined,
+              };
               const updatedInjuries = currentInjuries.map(inj =>
                 inj.id === adviceTarget.id
-                  ? { ...inj, advice: adviceText, adviceDate: new Date().toISOString().slice(0, 10), adviceBy: selectedPerson.label ?? undefined, updatedAt: new Date().toISOString() }
+                  ? { ...inj, advices: [...(inj.advices ?? []), newAdvice], updatedAt: new Date().toISOString() }
                   : inj
               );
 
@@ -391,7 +396,7 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
                           >
                             {STATUS_LABELS[injury.status]}
                           </span>
-                          {injury.advice && <span className="text-xs">💬</span>}
+                          {injury.advices && injury.advices.length > 0 && <span className="text-xs">💬</span>}
                         </div>
                         <div className="text-xs text-gray-400 mt-0.5">
                           {INJURY_TYPES[injury.type].nl}
@@ -415,6 +420,11 @@ export default function FollowingPage({ sync }: FollowingPageProps) {
             onUpdate={() => {}}
             onDelete={() => {}}
             onClose={() => setSelectedInjuryDetail(null)}
+            readOnly={true}
+            onAdvice={selectedPerson.permission === 'write' ? () => {
+              setAdviceTarget(selectedInjuryDetail);
+              setSelectedInjuryDetail(null);
+            } : undefined}
           />
         )}
       </div>
