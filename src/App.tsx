@@ -37,7 +37,7 @@ function App() {
       </div>
 
       {/* Bottom navigation */}
-      <nav className="bg-surface-800 border-t border-surface-600 pb-[env(safe-area-inset-bottom)]">
+      <nav className="bg-white border-t border-surface-600 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
         <div className="flex">
           {tabs.map(tab => (
             <button
@@ -45,14 +45,14 @@ function App() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 flex flex-col items-center py-2.5 transition-colors ${
                 activeTab === tab.key
-                  ? 'text-rugby-400'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'text-rugby-700'
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               <span className="text-xl mb-0.5">{tab.icon}</span>
               <span className="text-[10px] font-medium">{tab.label}</span>
               {activeTab === tab.key && (
-                <div className="w-4 h-0.5 bg-rugby-400 rounded-full mt-0.5" />
+                <div className="w-4 h-0.5 bg-rugby-700 rounded-full mt-0.5" />
               )}
             </button>
           ))}

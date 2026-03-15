@@ -37,7 +37,7 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
 
   return (
     <div className="h-full flex flex-col px-4 pt-3">
-      <h1 className="text-lg font-bold text-white mb-3">Logboek</h1>
+      <h1 className="text-lg font-bold text-gray-900 mb-3">Logboek</h1>
 
       {/* Filter tabs */}
       <div className="flex gap-1.5 mb-4 overflow-x-auto no-scrollbar">
@@ -47,8 +47,8 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
             onClick={() => setFilter(tab.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
               filter === tab.key
-                ? 'bg-rugby-700 text-white'
-                : 'bg-surface-700 text-gray-400 hover:text-white'
+                ? 'bg-rugby-700 text-white shadow-sm'
+                : 'bg-white text-gray-500 hover:text-gray-700 border border-surface-600'
             }`}
           >
             {tab.label} ({tab.count})
@@ -59,7 +59,7 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
       {/* Injury list */}
       <div className="flex-1 overflow-y-auto space-y-2 pb-4">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <div className="text-4xl mb-3">🏉</div>
             <p className="text-sm">Geen blessures gevonden</p>
           </div>
@@ -70,13 +70,13 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
               <button
                 key={injury.id}
                 onClick={() => setSelectedInjury(injury)}
-                className="w-full bg-surface-800 hover:bg-surface-700 rounded-xl p-4 flex items-center gap-3 transition-colors text-left"
+                className="w-full bg-white hover:bg-surface-700 rounded-xl p-4 flex items-center gap-3 transition-colors text-left shadow-sm border border-surface-600"
               >
                 {/* Severity dot */}
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    backgroundColor: `${SEVERITY_COLORS[injury.severity]}15`,
+                    backgroundColor: `${SEVERITY_COLORS[injury.severity]}18`,
                   }}
                 >
                   <span
@@ -90,13 +90,13 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white truncate">
+                    <span className="text-sm font-medium text-gray-900 truncate">
                       {zone?.nameNl || injury.bodyZoneId}
                     </span>
                     <span
                       className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0"
                       style={{
-                        backgroundColor: `${STATUS_COLORS[injury.status]}20`,
+                        backgroundColor: `${STATUS_COLORS[injury.status]}18`,
                         color: STATUS_COLORS[injury.status],
                       }}
                     >
@@ -104,12 +104,14 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
                     </span>
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {INJURY_TYPES[injury.type].nl} · {formatDate(injury.date)}
+                    {INJURY_TYPES[injury.type].nl}
+                    {injury.subLocation && ` · ${injury.subLocation}`}
+                    {' · '}{formatDate(injury.date)}
                   </div>
                 </div>
 
                 {/* Arrow */}
-                <div className="text-gray-600 flex-shrink-0">›</div>
+                <div className="text-gray-300 flex-shrink-0">›</div>
               </button>
             );
           })

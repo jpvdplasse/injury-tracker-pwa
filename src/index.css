@@ -9,11 +9,12 @@
   --color-rugby-400: #66b366;
   --color-rugby-300: #88cc88;
 
-  --color-surface-900: #0f1115;
-  --color-surface-800: #181a20;
-  --color-surface-700: #1f222a;
-  --color-surface-600: #282c36;
-  --color-surface-500: #333842;
+  /* Light theme surfaces */
+  --color-surface-900: #f5f6f8;
+  --color-surface-800: #ffffff;
+  --color-surface-700: #f0f1f4;
+  --color-surface-600: #e2e4e8;
+  --color-surface-500: #c8cbd2;
 
   --color-severity-1: #4ade80;
   --color-severity-2: #a3e635;
@@ -39,7 +40,7 @@ html, body, #root {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #e2e8f0;
+  color: #1a1a2e;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
@@ -51,7 +52,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333842;
+  background: #c8cbd2;
   border-radius: 2px;
 }
 

@@ -57,26 +57,29 @@ export default function StatsPage({ injuries }: StatsPageProps) {
 
   const maxRegionCount = Math.max(...Object.values(regionCounts), 1);
 
+  const card = "bg-white rounded-xl p-4 mb-4 shadow-sm border border-surface-600";
+  const cardLabel = "text-sm font-medium text-gray-600 mb-3";
+
   return (
     <div className="h-full overflow-y-auto px-4 pt-3 pb-4">
-      <h1 className="text-lg font-bold text-white mb-4">Statistieken</h1>
+      <h1 className="text-lg font-bold text-gray-900 mb-4">Statistieken</h1>
 
       {injuries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <div className="text-4xl mb-3">📊</div>
           <p className="text-sm">Nog geen blessures geregistreerd</p>
-          <p className="text-xs mt-1 text-gray-600">Begin met het loggen van blessures op de Body Map</p>
+          <p className="text-xs mt-1 text-gray-300">Begin met het loggen van blessures op de Body Map</p>
         </div>
       ) : (
         <>
           {/* Overview Cards */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="bg-surface-800 rounded-xl p-4">
-              <div className="text-2xl font-bold text-white">{injuries.length}</div>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-600">
+              <div className="text-2xl font-bold text-gray-900">{injuries.length}</div>
               <div className="text-xs text-gray-400">Totaal Blessures</div>
             </div>
-            <div className="bg-surface-800 rounded-xl p-4">
-              <div className="text-2xl font-bold" style={{ color: SEVERITY_COLORS[Math.round(parseFloat(avgSeverity)) as 1|2|3|4|5] || '#fff' }}>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-600">
+              <div className="text-2xl font-bold" style={{ color: SEVERITY_COLORS[Math.round(parseFloat(avgSeverity)) as 1|2|3|4|5] || '#1a1a1a' }}>
                 {avgSeverity}
               </div>
               <div className="text-xs text-gray-400">Gem. Ernst</div>
@@ -84,8 +87,8 @@ export default function StatsPage({ injuries }: StatsPageProps) {
           </div>
 
           {/* Status overview */}
-          <div className="bg-surface-800 rounded-xl p-4 mb-4">
-            <div className="text-sm font-medium text-gray-300 mb-3">Status Overzicht</div>
+          <div className={card}>
+            <div className={cardLabel}>Status Overzicht</div>
             <div className="flex gap-3">
               {(['active', 'recovering', 'healed'] as const).map(status => {
                 const count = status === 'active' ? activeCount : status === 'recovering' ? recoveringCount : healedCount;
@@ -99,7 +102,7 @@ export default function StatsPage({ injuries }: StatsPageProps) {
                       {count}
                     </div>
                     <div className="text-[10px] text-gray-400 mb-1.5">{STATUS_LABELS[status]}</div>
-                    <div className="h-1.5 bg-surface-600 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -115,8 +118,8 @@ export default function StatsPage({ injuries }: StatsPageProps) {
           </div>
 
           {/* Body Region Chart */}
-          <div className="bg-surface-800 rounded-xl p-4 mb-4">
-            <div className="text-sm font-medium text-gray-300 mb-3">Per Lichaamsdeel</div>
+          <div className={card}>
+            <div className={cardLabel}>Per Lichaamsdeel</div>
             <div className="space-y-2.5">
               {Object.entries(regionLabels).map(([region, label]) => {
                 const count = regionCounts[region] || 0;
@@ -124,10 +127,10 @@ export default function StatsPage({ injuries }: StatsPageProps) {
                 return (
                   <div key={region}>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-300">{label}</span>
+                      <span className="text-gray-700">{label}</span>
                       <span className="text-gray-400">{count}</span>
                     </div>
-                    <div className="h-2 bg-surface-600 rounded-full overflow-hidden">
+                    <div className="h-2 bg-surface-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-rugby-600 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
@@ -141,16 +144,16 @@ export default function StatsPage({ injuries }: StatsPageProps) {
 
           {/* Top Body Parts */}
           {topBodyParts.length > 0 && (
-            <div className="bg-surface-800 rounded-xl p-4 mb-4">
-              <div className="text-sm font-medium text-gray-300 mb-3">Meest Kwetsbare Zones</div>
+            <div className={card}>
+              <div className={cardLabel}>Meest Kwetsbare Zones</div>
               <div className="space-y-2">
                 {topBodyParts.map(([zoneId, count], i) => {
                   const zone = getBodyZone(zoneId);
                   return (
                     <div key={zoneId} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-4">{i + 1}.</span>
-                      <span className="text-sm text-gray-200 flex-1">{zone?.nameNl || zoneId}</span>
-                      <span className="text-sm font-medium text-rugby-400">{count}×</span>
+                      <span className="text-xs text-gray-400 w-4">{i + 1}.</span>
+                      <span className="text-sm text-gray-700 flex-1">{zone?.nameNl || zoneId}</span>
+                      <span className="text-sm font-medium text-rugby-700">{count}×</span>
                     </div>
                   );
                 })}
@@ -160,15 +163,15 @@ export default function StatsPage({ injuries }: StatsPageProps) {
 
           {/* Injury Types */}
           {topTypes.length > 0 && (
-            <div className="bg-surface-800 rounded-xl p-4 mb-4">
-              <div className="text-sm font-medium text-gray-300 mb-3">Type Blessures</div>
+            <div className={card}>
+              <div className={cardLabel}>Type Blessures</div>
               <div className="space-y-2">
                 {topTypes.map(([type, count]) => {
                   const typeInfo = INJURY_TYPES[type as keyof typeof INJURY_TYPES];
                   return (
                     <div key={type} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-200">{typeInfo?.nl || type}</span>
-                      <span className="text-sm font-medium text-rugby-400">{count}×</span>
+                      <span className="text-sm text-gray-700">{typeInfo?.nl || type}</span>
+                      <span className="text-sm font-medium text-rugby-700">{count}×</span>
                     </div>
                   );
                 })}
@@ -177,22 +180,22 @@ export default function StatsPage({ injuries }: StatsPageProps) {
           )}
 
           {/* Context Breakdown */}
-          <div className="bg-surface-800 rounded-xl p-4 mb-4">
-            <div className="text-sm font-medium text-gray-300 mb-3">Context</div>
+          <div className={card}>
+            <div className={cardLabel}>Context</div>
             <div className="flex gap-2">
               <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
                 <div className="text-lg">🏋️</div>
-                <div className="text-lg font-bold text-white">{contextCounts.training}</div>
+                <div className="text-lg font-bold text-gray-900">{contextCounts.training}</div>
                 <div className="text-[10px] text-gray-400">Training</div>
               </div>
               <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
                 <div className="text-lg">🏉</div>
-                <div className="text-lg font-bold text-white">{contextCounts.wedstrijd}</div>
+                <div className="text-lg font-bold text-gray-900">{contextCounts.wedstrijd}</div>
                 <div className="text-[10px] text-gray-400">Wedstrijd</div>
               </div>
               <div className="flex-1 bg-surface-700 rounded-lg p-3 text-center">
                 <div className="text-lg">📋</div>
-                <div className="text-lg font-bold text-white">{contextCounts.overig}</div>
+                <div className="text-lg font-bold text-gray-900">{contextCounts.overig}</div>
                 <div className="text-[10px] text-gray-400">Overig</div>
               </div>
             </div>

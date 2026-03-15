@@ -7,6 +7,7 @@ interface InjuryModalProps {
   injury?: Injury; // If editing
   onSave: (data: {
     bodyZoneId: string;
+    subLocation?: string;
     type: InjuryType;
     severity: 1 | 2 | 3 | 4 | 5;
     context: InjuryContext;
@@ -18,11 +19,13 @@ interface InjuryModalProps {
 
 export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryModalProps) {
   const zone = getBodyZone(zoneId);
+
   const [type, setType] = useState<InjuryType>(injury?.type || 'kneuzing');
   const [severity, setSeverity] = useState<1 | 2 | 3 | 4 | 5>(injury?.severity || 1);
   const [context, setContext] = useState<InjuryContext>(injury?.context || 'training');
   const [date, setDate] = useState(injury?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(injury?.notes || '');
+  const [subLocation, setSubLocation] = useState<string>(injury?.subLocation ?? '');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -30,50 +33,77 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
   }, []);
 
   const handleSave = () => {
-    onSave({ bodyZoneId: zoneId, type, severity, context, date, notes });
+    onSave({
+      bodyZoneId: zoneId,
+      subLocation: subLocation || undefined,
+      type,
+      severity,
+      context,
+      date,
+      notes,
+    });
   };
+
+  const subLocations = zone?.subLocations ?? [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 animate-fade-in" />
+      <div className="absolute inset-0 bg-black/40 animate-fade-in" />
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg bg-surface-800 rounded-t-2xl animate-slide-up max-h-[85vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-white rounded-t-2xl animate-slide-up max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-surface-500 rounded-full" />
+          <div className="w-10 h-1 bg-surface-600 rounded-full" />
         </div>
 
         <div className="px-5 pb-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-gray-900">
                 {injury ? 'Blessure Bewerken' : 'Nieuwe Blessure'}
               </h2>
-              <p className="text-rugby-400 text-sm mt-0.5">
+              <p className="text-rugby-700 text-sm mt-0.5">
                 📍 {zone?.nameNl || zoneId}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-surface-600 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              className="w-8 h-8 rounded-full bg-surface-700 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors"
             >
               ✕
             </button>
           </div>
 
+          {/* Sub-location (includes left/right options where relevant) */}
+          {subLocations.length > 0 && (
+            <label className="block mb-4">
+              <span className="text-sm text-gray-500 mb-1.5 block">Locatie</span>
+              <select
+                value={subLocation}
+                onChange={e => setSubLocation(e.target.value)}
+                className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors appearance-none"
+              >
+                <option value="">— Selecteer locatie —</option>
+                {subLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </label>
+          )}
+
           {/* Type */}
           <label className="block mb-4">
-            <span className="text-sm text-gray-400 mb-1.5 block">Type Blessure</span>
+            <span className="text-sm text-gray-500 mb-1.5 block">Type Blessure</span>
             <select
               value={type}
               onChange={e => setType(e.target.value as InjuryType)}
-              className="w-full bg-surface-700 border border-surface-500 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-rugby-600 transition-colors appearance-none"
+              className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors appearance-none"
             >
               {Object.entries(INJURY_TYPES).map(([key, val]) => (
                 <option key={key} value={key}>{val.nl} / {val.en}</option>
@@ -83,7 +113,7 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
 
           {/* Severity */}
           <div className="mb-4">
-            <span className="text-sm text-gray-400 mb-2 block">Ernst (1-5)</span>
+            <span className="text-sm text-gray-500 mb-2 block">Ernst (1-5)</span>
             <div className="flex gap-2">
               {([1, 2, 3, 4, 5] as const).map(s => (
                 <button
@@ -92,7 +122,7 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     severity === s
                       ? 'text-white shadow-lg scale-105'
-                      : 'text-gray-500 bg-surface-700'
+                      : 'text-gray-400 bg-surface-700 border border-surface-600'
                   }`}
                   style={severity === s ? {
                     backgroundColor: SEVERITY_COLORS[s],
@@ -104,14 +134,14 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
               ))}
             </div>
             <div className="flex justify-between mt-1.5 px-1">
-              <span className="text-[10px] text-gray-500">Mild</span>
-              <span className="text-[10px] text-gray-500">Ernstig</span>
+              <span className="text-[10px] text-gray-400">Mild</span>
+              <span className="text-[10px] text-gray-400">Ernstig</span>
             </div>
           </div>
 
           {/* Context */}
           <div className="mb-4">
-            <span className="text-sm text-gray-400 mb-2 block">Context</span>
+            <span className="text-sm text-gray-500 mb-2 block">Context</span>
             <div className="flex gap-2">
               {(Object.entries(INJURY_CONTEXTS) as [InjuryContext, string][]).map(([key, label]) => (
                 <button
@@ -120,7 +150,7 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
                   className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     context === key
                       ? 'bg-rugby-700 text-white'
-                      : 'bg-surface-700 text-gray-400 hover:text-white'
+                      : 'bg-surface-700 text-gray-500 hover:text-gray-800 border border-surface-600'
                   }`}
                 >
                   {key === 'training' ? '🏋️' : key === 'wedstrijd' ? '🏉' : '📋'} {label}
@@ -131,31 +161,31 @@ export default function InjuryModal({ zoneId, injury, onSave, onClose }: InjuryM
 
           {/* Date */}
           <label className="block mb-4">
-            <span className="text-sm text-gray-400 mb-1.5 block">Datum</span>
+            <span className="text-sm text-gray-500 mb-1.5 block">Datum</span>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full bg-surface-700 border border-surface-500 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-rugby-600 transition-colors"
+              className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors"
             />
           </label>
 
           {/* Notes */}
           <label className="block mb-6">
-            <span className="text-sm text-gray-400 mb-1.5 block">Notities</span>
+            <span className="text-sm text-gray-500 mb-1.5 block">Notities</span>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Beschrijving van de blessure..."
               rows={3}
-              className="w-full bg-surface-700 border border-surface-500 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-rugby-600 transition-colors resize-none placeholder:text-gray-600"
+              className="w-full bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-rugby-600 transition-colors resize-none placeholder:text-gray-400"
             />
           </label>
 
           {/* Save */}
           <button
             onClick={handleSave}
-            className="w-full bg-rugby-700 hover:bg-rugby-600 text-white py-3.5 rounded-xl font-semibold transition-colors active:scale-[0.98] shadow-lg"
+            className="w-full bg-rugby-700 hover:bg-rugby-600 text-white py-3.5 rounded-xl font-semibold transition-colors active:scale-[0.98] shadow-md"
           >
             {injury ? 'Opslaan' : 'Blessure Registreren'}
           </button>
