@@ -27,7 +27,7 @@ function App() {
       {/* Page content */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {activeTab === 'bodymap' && (
-          <BodyMapPage injuries={injuries} onAddInjury={addInjury} />
+          <BodyMapPage injuries={injuries} onAddInjury={addInjury} onUpdateStatus={updateStatus} onUpdate={updateInjury} onDelete={deleteInjury} />
         )}
         {activeTab === 'logboek' && (
           <LogboekPage
