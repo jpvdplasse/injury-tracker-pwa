@@ -37,7 +37,7 @@ function save(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function useSync(injuries: Injury[]) {
+export function useSync(injuries: Injury[], onMergeRemote?: (remoteInjuries: Injury[]) => void) {
   const [ownerId, setOwnerId] = useState<string | null>(() => localStorage.getItem(KEY_OWNER_ID));
   const [encryptionKey, setEncryptionKey] = useState<string | null>(() => localStorage.getItem(KEY_ENCRYPTION_KEY));
   const [links, setLinks] = useState<SyncLink[]>(() => load<SyncLink[]>(KEY_LINKS, []));
@@ -179,6 +179,29 @@ export function useSync(injuries: Injury[]) {
   useEffect(() => {
     if (isSharing) fetchLinks();
   }, [isSharing, fetchLinks]);
+
+  // Auto-pull own sync data to pick up changes from collaborators (e.g. fysio advice)
+  useEffect(() => {
+    if (!isSharing || !ownerId || !encryptionKey || !onMergeRemote) return;
+
+    const pullOwn = async () => {
+      try {
+        const result = await pullData(ownerId, encryptionKey);
+        if (result.injuries.length > 0) {
+          onMergeRemote(result.injuries);
+        }
+      } catch {
+        // ignore pull errors
+      }
+    };
+
+    // Pull every 15 seconds
+    const interval = setInterval(pullOwn, 15_000);
+    // Also pull once on mount
+    pullOwn();
+
+    return () => clearInterval(interval);
+  }, [isSharing, ownerId, encryptionKey, onMergeRemote, pullData]);
 
   return {
     isSharing,

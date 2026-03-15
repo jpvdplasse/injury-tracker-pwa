@@ -12,8 +12,8 @@ type Tab = 'bodymap' | 'logboek' | 'stats' | 'volgen';
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('bodymap');
   const [showShareModal, setShowShareModal] = useState(false);
-  const { injuries, addInjury, updateInjury, updateStatus, deleteInjury } = useInjuries();
-  const sync = useSync(injuries);
+  const { injuries, addInjury, updateInjury, updateStatus, deleteInjury, mergeRemote } = useInjuries();
+  const sync = useSync(injuries, mergeRemote);
 
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: 'bodymap', icon: '🏠', label: 'Body Map' },

@@ -70,6 +70,29 @@ export function useInjuries() {
     setInjuries(prev => prev.filter(injury => injury.id !== id));
   }, []);
 
+  /** Merge remote injuries — picks up advice/updates from collaborators without overwriting local changes */
+  const mergeRemote = useCallback((remoteInjuries: Injury[]) => {
+    setInjuries(prev => {
+      let changed = false;
+      const merged = prev.map(local => {
+        const remote = remoteInjuries.find(r => r.id === local.id);
+        if (!remote) return local;
+        // Merge advice fields from remote if local doesn't have them or remote is newer
+        if (remote.advice && remote.advice !== local.advice) {
+          changed = true;
+          return { ...local, advice: remote.advice, adviceDate: remote.adviceDate, adviceBy: remote.adviceBy };
+        }
+        return local;
+      });
+      // Also add any injuries that exist remotely but not locally (added by fysio)
+      const localIds = new Set(prev.map(i => i.id));
+      const newFromRemote = remoteInjuries.filter(r => !localIds.has(r.id));
+      if (newFromRemote.length > 0) changed = true;
+
+      return changed || newFromRemote.length > 0 ? [...merged, ...newFromRemote] : prev;
+    });
+  }, []);
+
   const activeInjuries = injuries.filter(i => i.status !== 'healed');
   const healedInjuries = injuries.filter(i => i.status === 'healed');
 
@@ -81,5 +104,6 @@ export function useInjuries() {
     updateInjury,
     updateStatus,
     deleteInjury,
+    mergeRemote,
   };
 }
