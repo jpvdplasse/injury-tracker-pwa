@@ -1,19 +1,25 @@
 import { useState } from 'react';
 import { useInjuries } from './hooks/useInjuries';
+import { useSync } from './hooks/useSync';
 import BodyMapPage from './pages/BodyMapPage';
 import LogboekPage from './pages/LogboekPage';
 import StatsPage from './pages/StatsPage';
+import FollowingPage from './pages/FollowingPage';
+import ShareModal from './components/ShareModal';
 
-type Tab = 'bodymap' | 'logboek' | 'stats';
+type Tab = 'bodymap' | 'logboek' | 'stats' | 'volgen';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('bodymap');
+  const [showShareModal, setShowShareModal] = useState(false);
   const { injuries, addInjury, updateInjury, updateStatus, deleteInjury } = useInjuries();
+  const sync = useSync(injuries);
 
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: 'bodymap', icon: '🏠', label: 'Body Map' },
     { key: 'logboek', icon: '📋', label: 'Logboek' },
     { key: 'stats', icon: '📊', label: 'Stats' },
+    { key: 'volgen', icon: '👥', label: 'Volgen' },
   ];
 
   return (
@@ -33,6 +39,9 @@ function App() {
         )}
         {activeTab === 'stats' && (
           <StatsPage injuries={injuries} />
+        )}
+        {activeTab === 'volgen' && (
+          <FollowingPage sync={sync} />
         )}
       </div>
 
@@ -56,8 +65,27 @@ function App() {
               )}
             </button>
           ))}
+
+          {/* Share button */}
+          <button
+            onClick={() => setShowShareModal(true)}
+            className={`flex-none flex flex-col items-center py-2.5 px-3 transition-colors relative ${
+              sync.isSharing ? 'text-rugby-700' : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <span className="text-xl mb-0.5">🔗</span>
+            <span className="text-[10px] font-medium">Delen</span>
+            {sync.isSharing && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-green-500 border border-white" />
+            )}
+          </button>
         </div>
       </nav>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <ShareModal sync={sync} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   );
 }

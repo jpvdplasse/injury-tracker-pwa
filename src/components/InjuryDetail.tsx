@@ -112,6 +112,22 @@ export default function InjuryDetail({ injury, onUpdateStatus, onUpdate, onDelet
             </div>
           )}
 
+          {/* Advice Card */}
+          {injury.advice && (
+            <div className="mb-5 rounded-xl p-4 border border-green-200" style={{ borderLeftWidth: '4px', borderLeftColor: '#22c55e', background: '#f0fdf4' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base">💬</span>
+                <span className="text-sm font-semibold text-green-800">
+                  {injury.adviceBy ? `Advies van ${injury.adviceBy}` : 'Advies van fysio'}
+                </span>
+                {injury.adviceDate && (
+                  <span className="text-xs text-green-500 ml-auto">{formatDate(injury.adviceDate)}</span>
+                )}
+              </div>
+              <p className="text-sm text-green-900 leading-relaxed">{injury.advice}</p>
+            </div>
+          )}
+
           {/* Status Progress */}
           <div className="mb-5">
             <div className="text-sm text-gray-500 mb-3">Herstel Voortgang</div>

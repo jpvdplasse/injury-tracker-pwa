@@ -103,10 +103,15 @@ export default function LogboekPage({ injuries, onUpdateStatus, onUpdate, onDele
                       {STATUS_LABELS[injury.status]}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
-                    {INJURY_TYPES[injury.type].nl}
-                    {injury.subLocation && ` · ${injury.subLocation}`}
-                    {' · '}{formatDate(injury.date)}
+                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                    <span>
+                      {INJURY_TYPES[injury.type].nl}
+                      {injury.subLocation && ` · ${injury.subLocation}`}
+                      {' · '}{formatDate(injury.date)}
+                    </span>
+                    {injury.advice && (
+                      <span title={`Advies: ${injury.advice}`} className="text-xs">💬</span>
+                    )}
                   </div>
                 </div>
 

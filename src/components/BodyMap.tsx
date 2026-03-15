@@ -349,6 +349,31 @@ export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProp
               </g>
             );
           })}
+
+          {/* ── ADVICE BADGES — 💬 if any active/recovering injury has advice ── */}
+          {Array.from(injuryMap.entries()).map(([zoneId, zoneInjuries]) => {
+            const hasAdvice = zoneInjuries.some(i => i.advice && (i.status === 'active' || i.status === 'recovering'));
+            if (!hasAdvice) return null;
+            const pos = zoneCenters[zoneId];
+            if (!pos) return null;
+            const [cx, cy] = pos;
+            // Offset the badge so it doesn't overlap the count badge
+            const bx = cx + 18;
+            const by = cy - 14;
+            return (
+              <g key={`advice-${zoneId}`} style={{ pointerEvents: 'none' }}>
+                <circle cx={bx} cy={by} r="11" fill="#dcfce7" stroke="#22c55e" strokeWidth="1.5" />
+                <text
+                  x={bx} y={by + 5}
+                  textAnchor="middle"
+                  fontSize="12"
+                  style={{ fontFamily: 'system-ui, sans-serif' }}
+                >
+                  💬
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
 
