@@ -4,12 +4,14 @@ import type { Injury } from '../types';
 interface BodyMapProps {
   injuries: Injury[];
   onZoneClick: (zoneId: string) => void;
+  viewDate?: Date; // timeline slider date — recency is relative to this
 }
 
-function severityFill(severity: number): string {
-  if (severity <= 2) return '#f5a623CC';
-  if (severity <= 3) return '#ff6b35CC';
-  return '#dc2626CC';
+/** Return RGB components as a string for use in rgba() */
+function severityRGB(severity: number): string {
+  if (severity <= 2) return '245,166,35';   // amber  #f5a623
+  if (severity <= 3) return '255,107,53';   // orange #ff6b35
+  return '220,38,38';                        // red    #dc2626
 }
 
 function severityStroke(severity: number): string {
@@ -21,6 +23,16 @@ function severityStroke(severity: number): string {
 function worstSeverity(zoneInjuries: Injury[]): number | null {
   if (zoneInjuries.length === 0) return null;
   return Math.max(...zoneInjuries.map(i => i.severity));
+}
+
+/** Calculate recency-based opacity relative to a reference date. Full intensity when recent, fades to 15% over 60 days */
+function recencyOpacity(zoneInjuries: Injury[], referenceDate: Date): number {
+  if (zoneInjuries.length === 0) return 1;
+  const mostRecent = zoneInjuries.reduce((a, b) =>
+    new Date(b.date) > new Date(a.date) ? b : a
+  );
+  const daysSince = Math.max(0, (referenceDate.getTime() - new Date(mostRecent.date).getTime()) / 86400000);
+  return Math.max(0.15, 1.0 - (daysSince / 60));
 }
 
 /**
@@ -102,7 +114,8 @@ const BODY_PATH =
   'c-1.35-3.434-2.494-7.354,1.014-9.525c3.51-2.174,7.818-0.303,12.412,0.27' +
   's10.975-0.35,12.566-3.357C385.108,440.35,380.246,439.092,375.86,438.039z';
 
-export default function BodyMap({ injuries, onZoneClick }: BodyMapProps) {
+export default function BodyMap({ injuries, onZoneClick, viewDate }: BodyMapProps) {
+  const refDate = viewDate ?? new Date();
   const [activeZone, setActiveZone] = useState<string | null>(null);
 
   const activeInjuries = injuries.filter(i => i.status !== 'healed');
@@ -126,26 +139,54 @@ export default function BodyMap({ injuries, onZoneClick }: BodyMapProps) {
     const sev = worstSeverity(zoneInjuries);
     const isActive = activeZone === id;
 
+    let fill: string;
+    let stroke: string;
+
+    if (isActive) {
+      fill = 'rgba(45,95,45,0.4)';
+      stroke = '#2d5f2d';
+    } else if (sev !== null) {
+      // Calculate recency-based opacity
+      const opacity = recencyOpacity(zoneInjuries, refDate);
+      fill = `rgba(${severityRGB(sev)},${opacity.toFixed(2)})`;
+      stroke = severityStroke(sev);
+    } else {
+      fill = 'rgba(100,130,110,0.12)';
+      stroke = 'rgba(80,110,90,0.35)';
+    }
+
     return {
       cursor: 'pointer' as const,
       style: {
-        transition: 'all 0.15s ease',
-        fill: isActive
-          ? 'rgba(45,95,45,0.4)'
-          : sev !== null
-            ? severityFill(sev)
-            : 'rgba(100,130,110,0.12)',
-        stroke: isActive
-          ? '#2d5f2d'
-          : sev !== null
-            ? severityStroke(sev)
-            : 'rgba(80,110,90,0.35)',
+        transition: 'all 0.2s ease',
+        fill,
+        stroke,
         strokeWidth: sev !== null ? 2 : 0.8,
         strokeDasharray: sev !== null ? undefined : '5 4',
         strokeLinejoin: 'round' as const,
       },
       onClick: () => handleClick(id),
     };
+  };
+
+  // Helper for the back pill fill (mirrors zs logic but returns plain fill string)
+  const backFill = (): string => {
+    const zoneInjuries = injuryMap.get('back') ?? [];
+    const sev = worstSeverity(zoneInjuries);
+    if (activeZone === 'back') return 'rgba(45,95,45,0.25)';
+    if (sev !== null) {
+      const opacity = recencyOpacity(zoneInjuries, refDate);
+      return `rgba(${severityRGB(sev)},${opacity.toFixed(2)})`;
+    }
+    return 'white';
+  };
+
+  const backStroke = (): string => {
+    const zoneInjuries = injuryMap.get('back') ?? [];
+    const sev = worstSeverity(zoneInjuries);
+    if (activeZone === 'back') return '#2d5f2d';
+    if (sev !== null) return severityStroke(sev);
+    return '#b8c0b8';
   };
 
   // Badge centers in 420×780 coordinate space
@@ -259,17 +300,9 @@ export default function BodyMap({ injuries, onZoneClick }: BodyMapProps) {
             x={5} y={150} width={62} height={32} rx={10}
             style={{
               cursor: 'pointer',
-              transition: 'all 0.15s ease',
-              fill: activeZone === 'back'
-                ? 'rgba(45,95,45,0.25)'
-                : (injuryMap.get('back')?.length ?? 0) > 0
-                  ? severityFill(worstSeverity(injuryMap.get('back') ?? []) ?? 1)
-                  : 'white',
-              stroke: activeZone === 'back'
-                ? '#2d5f2d'
-                : (injuryMap.get('back')?.length ?? 0) > 0
-                  ? severityStroke(worstSeverity(injuryMap.get('back') ?? []) ?? 1)
-                  : '#b8c0b8',
+              transition: 'all 0.2s ease',
+              fill: backFill(),
+              stroke: backStroke(),
               strokeWidth: 1.2,
               filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.12))',
             }}

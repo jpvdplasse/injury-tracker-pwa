@@ -154,7 +154,7 @@ export const BODY_ZONES: BodyZone[] = [
     nameNl: 'Romp / Buik',
     region: 'torso',
     sided: false,
-    subLocations: ['Buik', 'Zij links', 'Zij rechts', 'Heup links', 'Heup rechts', 'Lies links', 'Lies rechts'],
+    subLocations: ['Buik', 'Zij links', 'Zij rechts', 'Lies links', 'Lies rechts'],
   },
   {
     id: 'back',
@@ -170,7 +170,7 @@ export const BODY_ZONES: BodyZone[] = [
     nameNl: 'Linker Bovenbeen',
     region: 'legs',
     sided: true,
-    subLocations: ['Quadricep', 'Hamstring', 'Binnenkant dij', 'Buitenkant dij'],
+    subLocations: ['Heup', 'Quadricep', 'Hamstring', 'Binnenkant dij', 'Buitenkant dij'],
   },
   {
     id: 'right-upper-leg',
@@ -178,7 +178,7 @@ export const BODY_ZONES: BodyZone[] = [
     nameNl: 'Rechter Bovenbeen',
     region: 'legs',
     sided: true,
-    subLocations: ['Quadricep', 'Hamstring', 'Binnenkant dij', 'Buitenkant dij'],
+    subLocations: ['Heup', 'Quadricep', 'Hamstring', 'Binnenkant dij', 'Buitenkant dij'],
   },
   {
     id: 'left-knee',
